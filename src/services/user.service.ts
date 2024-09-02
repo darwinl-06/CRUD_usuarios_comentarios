@@ -41,7 +41,7 @@ class UserService {
 
     public async update(id: string, userInput: UserInput): Promise<UserDocument | null> {
         try {
-            const user: UserDocument | null = await UserModel.findByIdAndUpdate(id,userInput, {returnOriginal:false});
+            const user: UserDocument | null = await UserModel.findByIdAndUpdate(id, userInput, {returnOriginal:false});
             return user;
         } catch (error) {
             throw error;
@@ -88,7 +88,7 @@ class UserService {
 
     private generateToken(user: UserDocument): string {
         try {
-            return jwt.sign({user_id: user._id, email: user.email, name: user.name}, process.env.JWT_SECRET || "secret", {expiresIn: "5m"});
+            return jwt.sign({user_id: user._id, email: user.email, name: user.name, role: user.role}, process.env.JWT_SECRET || "secret", {expiresIn: "10000m"});
         } catch (error) {
             throw error;
         }

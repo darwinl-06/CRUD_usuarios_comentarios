@@ -8,11 +8,6 @@ class UserController {
     
     public async create (req: Request, res: Response) {
         try {
-            /*
-            const userExist = await userService.findByEmail(req.body.email)
-            if (userExist)
-                res.status(400).json({message: "user already exist"})
-            */
             const user: UserDocument = await userService.create(req.body as UserInput)
 
             res.status(201).json(user);
