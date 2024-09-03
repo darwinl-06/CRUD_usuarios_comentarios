@@ -107,7 +107,7 @@ class CommentController {
      */
     async addReplyToReply(req: Request, res: Response) {
         try {
-            const reply = await commentService.addReply(req.params, req.body);
+            const reply = await commentService.addNestedReply(req.params.commentId, req.params.replyId, req.body, req.params.id);
 
             return res.status(201).json(reply);
         } catch (error) {
@@ -159,6 +159,8 @@ class CommentController {
     public async deleteReply(req: Request, res: Response) {
         try {
             const comment = await commentService.findById(req.params.commentId)
+            console.log(comment?.userId.toString());
+            console.log(req.params.id);
             if (req.params.id != comment?.userId.toString()) {
                 res.status(400).json({ message: `Not Your Comment` })
                 return;

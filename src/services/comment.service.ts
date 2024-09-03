@@ -1,364 +1,351 @@
-// Import Mongoose library for MongoDB interactions and types for Comment and related documents
-import mongoose from "mongoose";
-import { CommentDocument, IComment, IReaction, IReply } from "../models/comment.model";
-import CommentModel from "../models/comment.model";
+import mongoose from "mongoose"; // Import Mongoose library for MongoDB operations
+import { CommentDocument, IComment, IReaction, IReply } from "../models/comment.model"; // Import types and interfaces for comments, reactions, and replies
+import CommentModel from "../models/comment.model"; // Import the Comment model
+import { Console } from "console"; // Import Console object (though not used in the code)
 
+// Define the CommentService class
 class CommentService {
 
-    // Create a new comment in the database
+    // Method to create a new comment
     public async createComment(commentInput: IComment): Promise<CommentDocument> {
         try {
-            const comment = await CommentModel.create(commentInput);
-            return comment;
+            const comment = await CommentModel.create(commentInput); // Create a comment using the CommentModel
+            return comment; // Return the created comment
         } catch (error) {
-            throw error;
+            throw error; // Propagate any errors
         }
     }
 
-     // Retrieve all comments from the database
+    // Method to retrieve all comments
     public async findAll(): Promise<CommentDocument[]> {
         try {
-            const comments = await CommentModel.find();
-            return comments;
+            const comments = await CommentModel.find(); // Retrieve all comments
+            return comments; // Return the list of comments
         } catch (error) {
-            throw error;
+            throw error; // Propagate any errors
         }
     }
 
-      // Find a comment by its ID 
+    // Method to find a comment by its ID
     public async findById(_id: string): Promise<CommentDocument | null> {
         try {
-            const comment = await CommentModel.findById(_id);
-            return comment;
+            const comment = await CommentModel.findById(_id); // Find comment by ID
+            return comment; // Return the found comment or null if not found
         } catch (error) {
-            throw error;
+            throw error; // Propagate any errors
         }
     }
 
-    // Update a comment by its ID
+    // Method to update an existing comment by its ID
     public async update(id: string, commentInput: IComment): Promise<CommentDocument | null> {
         try {
-            const comment: CommentDocument | null = await CommentModel.findByIdAndUpdate(id, commentInput, { returnOriginal: false });
-            return comment;
+            const comment: CommentDocument | null = await CommentModel.findByIdAndUpdate(id, commentInput, { returnOriginal: false }); // Update the comment
+            return comment; // Return the updated comment or null if not found
         } catch (error) {
-            throw error;
+            throw error; // Propagate any errors
         }
     }
 
-    // Delete a comment by its ID
+    // Method to delete a comment by its ID
     public async delete(id: string): Promise<CommentDocument | null> {
         try {
-            const comment: CommentDocument | null = await CommentModel.findByIdAndDelete(id);
-            return comment;
+            const comment: CommentDocument | null = await CommentModel.findByIdAndDelete(id); // Delete the comment
+            return comment; // Return the deleted comment or null if not found
         } catch (error) {
-            throw error;
+            throw error; // Propagate any errors
         }
     }
-
-    // Add a reply to a specific comment
+                                                                                                                                                 
+    // Method to add a reply to a specific comment
     public async addReplyToOne(commentId: string, replyInput: IComment, idUser: string): Promise<CommentDocument | null> {
         try {
             const updatedComment = await CommentModel.findByIdAndUpdate(commentId, {
                 $push: {
                     replies: {
                         content: replyInput.content,
-                        _id: new mongoose.Types.ObjectId()._id,
-                        userId: new mongoose.Types.ObjectId(idUser),
-                        replies: [],
-                        reactions: []
+                        _id: new mongoose.Types.ObjectId()._id, // Generate a new ObjectId for the reply
+                        userId: new mongoose.Types.ObjectId(idUser), // Convert userId to ObjectId
+                        replies: [], // Initialize an empty replies array
+                        reactions: [] // Initialize an empty reactions array
                     }
                 }
-            }, { new: true });
-            return updatedComment;
+            }, { new: true }); // Return the updated document
+            return updatedComment; // Return the updated comment
         } catch (error) {
-            throw error;
+            throw error; // Propagate any errors
         }
     }
 
-    // Helper function to add a reply to a comment recursively
-    private addReplyToComment(comments: CommentDocument[], commentId: string, reply: any): boolean {
-
-        for (let comment of comments) {
-
-            const commentIdParsed = new mongoose.Types.ObjectId(commentId)
-            if (comment._id == commentId) {
-                if (!comment.replies) {
-                    comment.replies = []; 
-                }
-                comment.replies.push(reply);
-                return true;
-            }
-
-            if (comment.replies && comment.replies.length > 0) {
-                const added = this.addReplyToComment(comment.replies as CommentDocument[], commentId, reply);
-                if (added) {
-                    return true;
-                } 
-            }
-        }
-        return false;
-    }
-
-    // Add a reply to a comment by its ID
-    public async addReply(params: any, body: any) {
-
-        const comment = await CommentModel.findById(params.commentId);
-        if (!comment) throw new Error('Comment not found');
-    
-        const reply = {
-            _id: new mongoose.Types.ObjectId(),
-            content: body.content,
-            userId: new mongoose.Types.ObjectId(params.id),
-            replies: [],
-            reactions: []
-        };
-
-        if (!comment.replies) {
-            comment.replies = []; 
-        }
-
-        const added = this.addReplyToComment(comment.replies as CommentDocument[], params.replyId, reply);
-
-        if (!added) throw new Error('Failed to add reply');
-
-        await comment.save();
-        return reply;
-    }
-
-     // Helper function to delete a reply from a comment recursively
+    // Private method to delete a reply from a list of comments
     private deleteReplyToComment(comments: CommentDocument[], replyId: string): boolean {
         for (let comment of comments) {
-            if (comment.id.toString() === replyId) {
-                const index = comments.indexOf(comment);
+            if ((comment._id as string).toString() === replyId) { // Check if the comment ID matches the reply ID
+                const index = comments.indexOf(comment); // Find the index of the comment
                 if (index > -1) {
-                    comments.splice(index, 1);
-                    return true;
+                    comments.splice(index, 1); // Remove the comment from the array
+                    return true; // Indicate successful deletion
                 }
             }
-            if (comment.replies && comment.replies.length > 0) {
+            if (comment.replies && comment.replies.length > 0) { // Recursively check replies
                 const deleted = this.deleteReplyToComment(comment.replies as CommentDocument[], replyId);
                 if (deleted) {
-                    return true;
+                    return true; // Indicate successful deletion
                 }
             }
         }
-        return false;
+        return false; // Indicate failure to delete
     }
 
-    // Helper function to update a reply in comments recursively
+    // Private method to update a reply within comments
     private async updateReplyInComments(comments: CommentDocument[], replyId: string, updatedReply: any): Promise<boolean> {
         for (let comment of comments) {
-            // Verificar si el ID del comentario coincide con el ID de respuesta
             if (comment.replies) {
                 for (let reply of comment.replies) {
-                    if (reply._id.equals(replyId)) {
-                        // Actualizar el contenido de la respuesta
-                        reply.content = updatedReply.content;
-                        return true;
+                    if (reply._id.equals(replyId)) { // Check if the reply ID matches
+                        reply.content = updatedReply.content; // Update the reply content
+                        return true; // Indicate successful update
                     }
                 }
             }
     
-            // Buscar recursivamente en las respuestas anidadas
-            if (comment.replies && comment.replies.length > 0) {
+            if (comment.replies && comment.replies.length > 0) { // Recursively check replies
                 const updated = await this.updateReplyInComments(comment.replies as CommentDocument[], replyId, updatedReply);
                 if (updated) {
-                    return true;
+                    return true; // Indicate successful update
                 }
             }
         }
-        return false;
+        return false; // Indicate failure to update
     }
     
-     // Update a reply in a comment
+    // Method to update a reply in a comment
     public async updateReply(params: any, body: any): Promise<CommentDocument | null> {
-        const comment = await CommentModel.findById(params.commentId);
+        const comment = await CommentModel.findById(params.commentId); // Find the comment by ID
     
-        if (!comment) throw new Error('Comment not found');
+        if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
     
-        const updated = await this.updateReplyInComments(comment.replies as CommentDocument[], params.replyId, { content: body.content });
+        const updated = await this.updateReplyInComments(comment.replies as CommentDocument[], params.replyId, { content: body.content }); // Update the reply
     
-        if (!updated) throw new Error('Failed to update reply');
+        if (!updated) throw new Error('Failed to update reply'); // Throw an error if updating fails
     
-        await comment.save();
-        return comment;
+        await comment.save(); // Save the updated comment
+        return comment; // Return the updated comment
     }
 
-    // Delete a reply from a comment
+    // Method to delete a reply from a comment
     public async deleteReply(params: any): Promise<CommentDocument | null> {
-        const comment = await CommentModel.findById(params.commentId);
-        if (!comment) throw new Error('Comment not found');
+        const comment = await CommentModel.findById(params.commentId); // Find the comment by ID
+        if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
     
         if (!comment.replies) {
-            comment.replies = [];
+            comment.replies = []; // Initialize replies array if it is undefined
         }
     
-        const deleted = this.deleteReplyToComment(comment.replies as CommentDocument[], params.replyId);
+        const deleted = this.deleteReplyToComment(comment.replies as CommentDocument[], params.replyId); // Delete the reply
     
-        if (!deleted) throw new Error('Failed to delete reply');
+        if (!deleted) throw new Error('Failed to delete reply'); // Throw an error if deletion fails
     
-        await comment.save();
-        return comment;
+        await comment.save(); // Save the updated comment
+        return comment; // Return the updated comment
     }
 
+    // Method to add a nested reply to a specific reply
+    public async addNestedReply(commentId: string, replyId: string, replyInput: IReply, idUser: string): Promise<CommentDocument | null> {
+        try {
+            const comment = await CommentModel.findById(commentId); // Find the comment by ID
+            if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
+        
+            const nestedReply: IReply = {
+                _id: new mongoose.Types.ObjectId(), // Generate a new ObjectId for the nested reply
+                content: replyInput.content,
+                userId: new mongoose.Types.ObjectId(idUser), // Convert userId to ObjectId
+                replies: [], // Initialize an empty replies array
+                reactions: [] // Initialize an empty reactions array
+            };
+        
+            const added = this.addNestedReplyToComment(comment.replies as CommentDocument[], replyId, nestedReply); // Add the nested reply
+        
+            if (!added) throw new Error('Failed to add nested reply'); // Throw an error if adding fails
+        
+            comment.markModified('replies'); // Mark the replies field as modified
+
+            await comment.save(); // Save the updated comment
+        
+            return comment; // Return the updated comment
+        } catch (error) {
+            console.error('Error adding nested reply:', error); // Log any errors
+            throw error; // Propagate the error
+        }
+    }
     
+    // Private method to add a nested reply to a specific reply
+    private addNestedReplyToComment(comments: CommentDocument[], replyId: string, nestedReply: IReply): boolean {
+        for (let comment of comments) {
+            if ((comment._id as string).toString() === replyId) { // Check if the comment ID matches the reply ID
+                if (!comment.replies) {
+                    comment.replies = []; // Initialize replies array if it is undefined
+                }
+                comment.replies.push(nestedReply); // Add the nested reply
+                return true; // Indicate successful addition
+            }
+
+            if (comment.replies && comment.replies.length > 0) { // Recursively check replies
+                const added = this.addNestedReplyToComment(comment.replies as CommentDocument[], replyId, nestedReply);
+                if (added) {
+                    return true; // Indicate successful addition
+                }
+            }
+        }
+        return false; // Indicate failure to add
+    }
     
-    // Add a reaction to a comment
+    // Method to add a reaction to a comment
     async addReactionToComment(commentId: string, reaction: any, idUser: string): Promise<any> {
         try {
-            const commentIdParsed = new mongoose.Types.ObjectId(commentId);
+            const commentIdParsed = new mongoose.Types.ObjectId(commentId); // Convert commentId to ObjectId
 
             const result = await CommentModel.findOneAndUpdate(
                 { _id: commentIdParsed },
                 { $push: { reactions: {
-                    _id: new mongoose.Types.ObjectId(),
+                    _id: new mongoose.Types.ObjectId(), // Generate a new ObjectId for the reaction
                     content: reaction.content,
-                    userId: new mongoose.Types.ObjectId(idUser)
+                    userId: new mongoose.Types.ObjectId(idUser) // Convert userId to ObjectId
                 } } },
-                { new: true }
+                { new: true } // Return the updated document
             );
 
             if (result) {
-                return { success: true, data: result };
+                return { success: true, data: result }; // Return success result
             } else {
-                return { success: false, message: 'Comment not found' };
+                return { success: false, message: 'Comment not found' }; // Return failure result if comment not found
             }
         } catch (error) {
-            throw new Error;
+            throw new Error; // Throw a generic error
         }
     }
 
-     // Helper function to add a reaction to a reply recursively
+    // Method to add a reaction to a reply
+    public async addReactionToReply(commentId: string, replyId: string, reaction: any): Promise<CommentDocument | null> {
+        const comment = await CommentModel.findById(commentId); // Find the comment by ID
+
+        if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
+
+        const added = this.addReactionToReplyRecursive(comment.replies as CommentDocument[], replyId, reaction); // Add the reaction to the reply
+
+        if (!added) throw new Error('Failed to add reaction to reply'); // Throw an error if adding fails
+
+        comment.markModified('replies'); // Mark the replies field as modified
+        await comment.save(); // Save the updated comment
+        return comment; // Return the updated comment
+    }
+
+    // Private method to recursively add a reaction to a specific reply
     private addReactionToReplyRecursive(replies: any[], replyId: string, reaction: any): boolean {
         for (let reply of replies) {
-            if (reply._id.toString() == replyId) {
+            if (reply._id.toString() === replyId) { // Check if the reply ID matches
                 if (!reply.reactions) {
-                    reply.reactions = [];
+                    reply.reactions = []; // Initialize reactions array if it is undefined
                 }
-                reply.reactions.push(reaction);
-                return true;
+                reply.reactions.push(reaction); // Add the reaction
+                return true; // Indicate successful addition
             }
 
-            if (reply.replies && reply.replies.length > 0) {
+            if (reply.replies && reply.replies.length > 0) { // Recursively check nested replies
                 const added = this.addReactionToReplyRecursive(reply.replies, replyId, reaction);
                 if (added) {
-                    return true;
+                    return true; // Indicate successful addition
                 }
             }
         }
-        return false;
-    }
-
-     // Add a reaction to a reply
-    public async addReactionToReply(commentId: string, replyId: string, reaction: any): Promise<IReaction | null> {
-        const comment = await CommentModel.findById(commentId);
-
-        if (!comment) throw new Error('Comment not found');
-
-        if (!comment.replies) {
-            comment.replies = [];
-        }
-
-        const added = this.addReactionToReplyRecursive(comment.replies as CommentDocument[], replyId, reaction);
-
-        if (!added) throw new Error('Failed to add reaction to reply');
-
-        await comment.save();
-        return reaction;
+        return false; // Indicate failure to add
     }
  
-    // Helper function to delete a reaction recursively
+    // Private method to recursively delete a reaction
     private deleteReactionRecursive(replies: any[], replyId: string, reactionId: string): boolean {
         for (let reply of replies) {
-            if (reply._id.toString() === replyId) {
-                const reactionIndex = reply.reactions.findIndex((reaction: any) => reaction._id.toString() === reactionId);
+            if (reply._id.toString() === replyId) { // Check if the reply ID matches
+                const reactionIndex = reply.reactions.findIndex((reaction: any) => reaction._id.toString() === reactionId); // Find the index of the reaction
                 if (reactionIndex > -1) {
-                    reply.reactions.splice(reactionIndex, 1);
-                    return true;
+                    reply.reactions.splice(reactionIndex, 1); // Remove the reaction from the array
+                    return true; // Indicate successful deletion
                 }
             }
             
-            if (reply.replies && reply.replies.length > 0) {
+            if (reply.replies && reply.replies.length > 0) { // Recursively check nested replies
                 const deleted = this.deleteReactionRecursive(reply.replies, replyId, reactionId);
                 if (deleted) {
-                    return true;
+                    return true; // Indicate successful deletion
                 }
             }
         }
-        return false;
+        return false; // Indicate failure to delete
     }
     
-     // Delete a reaction from a comment or reply
+    // Method to delete a reaction from a comment or reply
     public async deleteReaction(params: any): Promise<CommentDocument | null> {
-        const { commentId, replyId, reactionId } = params;
-        const comment = await CommentModel.findById(commentId);
-        if (!comment) throw new Error('Comment not found');
+        const { commentId, replyId, reactionId } = params; // Extract parameters
+        const comment = await CommentModel.findById(commentId); // Find the comment by ID
+        if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
     
-        if (!replyId) {
-            const reactionIndex = comment.reactions ? comment.reactions.findIndex((reaction: any) => reaction._id.toString() === reactionId) : -1;
+        if (!replyId) { // If no replyId, delete the reaction from the comment itself
+            const reactionIndex = comment.reactions ? comment.reactions.findIndex((reaction: any) => reaction._id.toString() === reactionId) : -1; // Find the reaction index
             if (comment.reactions && reactionIndex > -1) {
-                comment.reactions.splice(reactionIndex, 1);
+                comment.reactions.splice(reactionIndex, 1); // Remove the reaction from the array
             } else {
-                throw new Error('Reaction not found');
+                throw new Error('Reaction not found'); // Throw an error if the reaction is not found
             }
-        } else {
-            const deleted = this.deleteReactionRecursive(comment.replies as CommentDocument[], replyId, reactionId);
-            if (!deleted) throw new Error('Failed to delete reaction');
+        } else { // If replyId is provided, delete the reaction from a reply
+            const deleted = this.deleteReactionRecursive(comment.replies as CommentDocument[], replyId, reactionId); // Delete the reaction
+            if (!deleted) throw new Error('Failed to delete reaction'); // Throw an error if deletion fails
         }
     
-        await comment.save();
-        return comment;
+        await comment.save(); // Save the updated comment
+        return comment; // Return the updated comment
     }
     
-     // Helper function to update a reaction recursively
+    // Private method to recursively update a reaction
     private updateReactionRecursive(replies: any[], replyId: string, reactionId: string, updatedContent: string): boolean {
         for (let reply of replies) {
-            if (reply._id.toString() === replyId) {
-                // Buscar la reacción dentro del array de reacciones de la respuesta
-                const reaction = reply.reactions.find((reaction: any) => reaction._id.toString() === reactionId);
+            if (reply._id.toString() === replyId) { // Check if the reply ID matches
+                const reaction = reply.reactions.find((reaction: any) => reaction._id.toString() === reactionId); // Find the reaction
                 if (reaction) {
-                    reaction.content = updatedContent;
-                    return true;
+                    reaction.content = updatedContent; // Update the reaction content
+                    return true; // Indicate successful update
                 }
             }
     
-            // Recursivamente busca en las respuestas anidadas
-            if (reply.replies && reply.replies.length > 0) {
+            if (reply.replies && reply.replies.length > 0) { // Recursively check nested replies
                 const updated = this.updateReactionRecursive(reply.replies, replyId, reactionId, updatedContent);
                 if (updated) {
-                    return true;
+                    return true; // Indicate successful update
                 }
             }
         }
-        return false;
+        return false; // Indicate failure to update
     }
     
-    // Update a reaction in a comment or reply
+    // Method to update a reaction in a comment or reply
     public async updateReaction(params: any, updatedContent: string): Promise<CommentDocument | null> {
-        const { commentId, replyId, reactionId } = params;
-        const comment = await CommentModel.findById(commentId);
-        if (!comment) throw new Error('Comment not found');
+        const { commentId, replyId, reactionId } = params; // Extract parameters
+        const comment = await CommentModel.findById(commentId); // Find the comment by ID
+        if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
     
-        // Si no hay un replyId, actualizamos la reacción del comentario principal
-        if (!replyId) {
-            const reaction = comment.reactions?.find((reaction: any) => reaction._id.toString() === reactionId);
+        if (!replyId) { // If no replyId, update the reaction in the comment itself
+            const reaction = comment.reactions?.find((reaction: any) => reaction._id.toString() === reactionId); // Find the reaction
             if (reaction) {
-                reaction.content = updatedContent;
+                reaction.content = updatedContent; // Update the reaction content
             } else {
-                throw new Error('Reaction not found');
+                throw new Error('Reaction not found'); // Throw an error if the reaction is not found
             }
-        } else {
-            // Si hay replyId, actualizamos la reacción en la respuesta anidada
-            const updated = this.updateReactionRecursive(comment.replies as CommentDocument[], replyId, reactionId, updatedContent);
-            if (!updated) throw new Error('Failed to update reaction');
+        } else { // If replyId is provided, update the reaction in a reply
+            const updated = this.updateReactionRecursive(comment.replies as CommentDocument[], replyId, reactionId, updatedContent); // Update the reaction
+            if (!updated) throw new Error('Failed to update reaction'); // Throw an error if updating fails
         }
     
-        await comment.save();
-        return comment;
+        await comment.save(); // Save the updated comment
+        return comment; // Return the updated comment
     }
-    
-
-
 }
 
+// Export an instance of the CommentService
 export default new CommentService();
