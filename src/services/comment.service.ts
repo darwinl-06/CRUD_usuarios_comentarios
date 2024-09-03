@@ -49,7 +49,7 @@ class CommentService {
             throw error;
         }
     }
-                                                                                                                                                                                 
+                                                                                                                                                 
     public async addReplyToOne(commentId: string, replyInput: IComment, idUser: string): Promise<CommentDocument | null> {
         try {
             const updatedComment = await CommentModel.findByIdAndUpdate(commentId, {
@@ -69,10 +69,9 @@ class CommentService {
         }
     }
 
-
     private deleteReplyToComment(comments: CommentDocument[], replyId: string): boolean {
         for (let comment of comments) {
-            if (comment.id.toString() === replyId) {
+            if ((comment._id as string).toString() === replyId) {
                 const index = comments.indexOf(comment);
                 if (index > -1) {
                     comments.splice(index, 1);
