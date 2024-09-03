@@ -14,19 +14,13 @@ router.post("/login", userController.login);
 
 router.post("/comments", auth, commentController.create);
 
-router.post("/comments/reply", auth, commentController.addReply);
-
-router.post("/comments/reaction", auth, commentController.addReaction);
+router.get("/", userController.getAll);
 
 router.get("/comments", auth, commentController.getAll);
 
 router.put("/comments", auth, commentController.update);
 
 router.delete("/comments", auth, commentController.delete);
-
-router.delete("/comments/reaction/delete", auth, commentController.deleteReaction);
-
-router.get("/", userController.getAll);
 
 router.get("/profile", auth, userController.getUser);
 
@@ -39,3 +33,20 @@ router.get("/:id/group/:groupId", (req: Request, res: Response) => {
 router.put("/:id", auth, authRole(['superadmin']), userController.update);
 
 router.delete("/:id", auth, authRole(['superadmin']), userController.delete);
+
+router.post("/comments/:commentId/replies/:replyId", auth, commentController.addReplyToReply);
+
+router.post("/comments/:commentId/replies/", auth, commentController.addReplyToOne);
+
+router.delete("/comments/:commentId/replies/:replyId", commentController.deleteReply);
+
+router.put('/comments/:commentId/replies/:replyId', commentController.editReply);
+
+router.post("/comments/:commentId/reaction", auth, commentController.addReactionToComment);
+
+router.post("/comments/:commentId/reaction/:replyId", auth, commentController.addReactionToReply);
+
+router.delete('/comments/:commentId/reaction/:reactionId/:replyId?', commentController.removeReaction);
+
+router.put('/comments/:commentId/reaction/:reactionId/:replyId?', commentController.editReaction);
+

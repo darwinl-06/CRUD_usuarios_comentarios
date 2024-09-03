@@ -1,12 +1,13 @@
 
 import commentService from "../services/comment.service"
-import { CommentDocument, IComment,IReaction } from "../models/comment.model";
+import { CommentDocument, IComment, IReaction, IReply } from "../models/comment.model";
 import { UserInfo } from "os";
-import express, { Request, Response} from "express";
+import express, { Request, Response } from "express";
+import mongoose from "mongoose";
 
-class CommentController{
+class CommentController {
 
-    public async create (req: Request, res: Response) {
+    public async create(req: Request, res: Response) {
         try {
             req.body.userId = req.params.id;
             const comment: CommentDocument = await commentService.createComment(req.body as IComment)
@@ -16,16 +17,16 @@ class CommentController{
         }
     }
 
-    public async update (req: Request, res: Response) {
+    public async update(req: Request, res: Response) {
         try {
-            const comment1 =  await commentService.findById(req.body.id)
+            const comment1 = await commentService.findById(req.body.id)
             if (req.params.id != comment1?.userId.toString()) {
-                res.status(400).json({ message: `Not Your Comment`})
+                res.status(400).json({ message: `Not Your Comment` })
                 return;
             }
             const comment: CommentDocument | null = await commentService.update(req.body.id, req.body as IComment);
             if (!comment) {
-                res.status(404).json({error: "not found", message: `Comment with id ${req.params.id} not found`})
+                res.status(404).json({ error: "not found", message: `Comment with id ${req.params.id} not found` })
                 return;
             }
 
@@ -35,38 +36,23 @@ class CommentController{
         }
     }
 
-    public async addReply(req: Request, res: Response) {
-        try {
-            req.body.userId = req.params.id;
-            const updatedComment = await commentService.addReply(req.body.id, req.body as IComment);
-    
-            if (!updatedComment) {
-                return res.status(404).json({ error: "Comment not found" });
-            }
-    
-            res.status(201).json(updatedComment);
-        } catch (error) {
-            res.status(500).json(error);
-        }
-    }
-    
-    
-    public async getComment (req: Request, res: Response) {
+
+    public async getComment(req: Request, res: Response) {
         try {
 
             const comment: CommentDocument | null = await commentService.findById(req.body.id);
             if (!comment) {
-                res.status(404).json({error: "not found", message: `Comment with id ${req.params.id} not found`})
+                res.status(404).json({ error: "not found", message: `Comment with id ${req.params.id} not found` })
                 return;
             }
-        
+
             res.json(comment);
         } catch (error) {
             res.status(500).json(error)
         }
     }
-    
-    public async getAll (req: Request, res: Response) {
+
+    public async getAll(req: Request, res: Response) {
         try {
             const comments: CommentDocument[] = await commentService.findAll()
             res.status(201).json(comments);
@@ -74,13 +60,12 @@ class CommentController{
             res.status(500).json(error)
         }
     }
-    
-    public async delete (req: Request, res: Response) {
-        try {
 
-            const comment =  await commentService.findById(req.body.id)
+    public async delete(req: Request, res: Response) {
+        try {
+            const comment = await commentService.findById(req.body.id)
             if (req.params.id != comment?.userId.toString()) {
-                res.status(400).json({ message: `Not Your Comment`})
+                res.status(400).json({ message: `Not Your Comment` })
                 return;
             }
             const comments: CommentDocument | null = await commentService.delete(req.body.id)
@@ -90,38 +75,123 @@ class CommentController{
         }
     }
 
+    async addReplyToReply(req: Request, res: Response) {
+        try {
+            const reply = await commentService.addReply(req.params, req.body);
 
-    public async addReaction(req: Request, res: Response) {
+            return res.status(201).json(reply);
+        } catch (error) {
+            return res.status(500).json(error);
+        }
+    }
+
+    public async addReplyToOne(req: Request, res: Response) {
         try {
             req.body.userId = req.params.id;
-            const updatedReaction = await commentService.addReaction(req.body.id, req.body as IReaction);
-    
-            if (!updatedReaction) {
+            const updatedComment = await commentService.addReplyToOne(req.params.commentId, req.body as IComment, req.params.id);
+            if (!updatedComment) {
                 return res.status(404).json({ error: "Comment not found" });
             }
-    
-            res.status(201).json(updatedReaction);
+            res.status(201).json(updatedComment);
         } catch (error) {
             res.status(500).json(error);
         }
     }
 
-    public async deleteReaction (req: Request, res: Response) {
+    public async editReply(req: Request, res: Response) {
         try {
-            const reaction =  await commentService.findById(req.body.id_comment)
-            console.log(req.body.id_comment)
+            console.log("ENTRA ENTRA ENTRA");
 
-            if (req.params.id != reaction?.userId.toString()) {
-                res.status(400).json({ message: `Not Your Reaction`})
+            const result = await commentService.updateReply(req.params, req.body);
+            
+            return res.status(200).json({ success: true, data: result });
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error });
+        }
+    }
+    
+
+    public async deleteReply(req: Request, res: Response) {
+        try {
+            const comment = await commentService.findById(req.params.commentId)
+            if (req.params.id != comment?.userId.toString()) {
+                res.status(400).json({ message: `Not Your Comment` })
                 return;
             }
-            const reactions: CommentDocument | null = await commentService.deleteReaction(req.body.id_comment, req.body.id_reaction)
-            res.status(200).json(reactions);
+            const { commentId, replyId } = req.params;
+            const updatedComment = await commentService.deleteReply({ commentId, replyId });
+            return res.status(200).json({
+                message: "Reply deleted successfully",
+                data: updatedComment
+            });
         } catch (error) {
-            res.status(500).json(error)
+            res.status(500).json(error);
+        };
+    }
+
+    async addReactionToComment(req: Request, res: Response) {
+        try {
+            const reaction = req.body;
+
+            // Llamar al servicio para agregar la reacción
+            const result = await commentService.addReactionToComment(req.params.commentId, reaction, req.params.id);
+
+            return res.status(201).json(result);
+        } catch (error) {
+            return res.status(500).json(error);
         }
     }
 
+    async addReactionToReply(req: Request, res: Response) {
+        try {
+            const { replyId } = req.params;
+            const reaction = {
+                _id: new mongoose.Types.ObjectId(),
+                content: req.body.content,
+                userId: req.params.id
+            };
+
+            const result = await commentService.addReactionToReply(req.params.commentId, req.params.replyId, reaction);
+
+            return res.status(201).json(result);
+        } catch (error) {
+            return res.status(500).json(error);
+        }
+    }
+
+    public async removeReaction(req: Request, res: Response){
+        try {
+            const comment = await commentService.findById(req.params.commentId)
+            if (req.params.id != comment?.userId.toString()) {
+                res.status(400).json({ message: `Not Your Comment` })
+                return;
+            }
+            const { commentId, replyId, reactionId } = req.params;
+            const result = await commentService.deleteReaction({ commentId, replyId, reactionId });
+
+            return res.status(200).json({ success: true, data: result });
+
+        } catch (error) {
+
+            return res.status(500).json({ success: false, error });
+        }
+    }
+
+    public async editReaction(req: Request, res: Response): Promise<Response> {
+        try {
+            const { commentId, replyId, reactionId } = req.params;
+            const { content } = req.body; // Se espera que el contenido actualizado esté en el cuerpo de la solicitud
+    
+            const result = await commentService.updateReaction({ commentId, replyId, reactionId }, content);
+            return res.status(200).json({ success: true, data: result });
+        } catch (error) {
+            return res.status(500).json({ success: false, error });
+        }
+    }
+    
+
+    
 }
+
 
 export default new CommentController();
