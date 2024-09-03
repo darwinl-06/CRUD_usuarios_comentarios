@@ -114,6 +114,8 @@ class CommentController {
     public async deleteReply(req: Request, res: Response) {
         try {
             const comment = await commentService.findById(req.params.commentId)
+            console.log(comment?.userId.toString());
+            console.log(req.params.id);
             if (req.params.id != comment?.userId.toString()) {
                 res.status(400).json({ message: `Not Your Comment` })
                 return;
