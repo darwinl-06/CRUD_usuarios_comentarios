@@ -69,55 +69,6 @@ class CommentService {
         }
     }
 
-      /* 
-    private addReplyToComment(comments: CommentDocument[], commentId: string, reply: any): boolean {
-
-        for (let comment of comments) {
-
-            const commentIdParsed = new mongoose.Types.ObjectId(commentId)
-            if (comment._id == commentId) {
-                if (!comment.replies) {
-                    comment.replies = []; 
-                }
-                comment.replies.push(reply);
-                return true;
-            }
-
-            if (comment.replies && comment.replies.length > 0) {
-                const added = this.addReplyToComment(comment.replies as CommentDocument[], commentId, reply);
-                if (added) {
-                    return true;
-                } 
-            }
-        }
-        return false;
-    }
-
-    public async addReply(params: any, body: any) {
-
-        const comment = await CommentModel.findById(params.commentId);
-        if (!comment) throw new Error('Comment not found');
-    
-        const reply = {
-            _id: new mongoose.Types.ObjectId(),
-            content: body.content,
-            userId: new mongoose.Types.ObjectId(params.id),
-            replies: [],
-            reactions: []
-        };
-
-        if (!comment.replies) {
-            comment.replies = []; 
-        }
-
-        const added = this.addReplyToComment(comment.replies as CommentDocument[], params.replyId, reply);
-
-        if (!added) throw new Error('Failed to add reply');
-
-        await comment.save();
-        return reply;
-    }
-    */
 
     private deleteReplyToComment(comments: CommentDocument[], replyId: string): boolean {
         for (let comment of comments) {
@@ -298,25 +249,6 @@ class CommentService {
         }
         return false;
     }
-
-    /*
-    public async addReactionToReply(commentId: string, replyId: string, reaction: any): Promise<IReaction | null> {
-        const comment = await CommentModel.findById(commentId);
-
-        if (!comment) throw new Error('Comment not found');
-
-        if (!comment.replies) {
-            comment.replies = [];
-        }
-
-        const added = this.addReactionToReplyRecursive(comment.replies as CommentDocument[], replyId, reaction);
-
-        if (!added) throw new Error('Failed to add reaction to reply');
-
-        await comment.save();
-        return reaction;
-    }
-    */
  
     private deleteReactionRecursive(replies: any[], replyId: string, reactionId: string): boolean {
         for (let reply of replies) {
