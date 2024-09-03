@@ -7,6 +7,11 @@ import mongoose from "mongoose";
 
 class CommentController {
 
+
+    /**
+     * Creates a new comment associated with the user specified in the request params.
+     * Responds with the created comment object or an error if the operation fails.
+     */
     public async create(req: Request, res: Response) {
         try {
             req.body.userId = req.params.id;
@@ -17,6 +22,11 @@ class CommentController {
         }
     }
 
+
+    /**
+     * Updates an existing comment if the comment belongs to the user making the request.
+     * Responds with the updated comment object or an error if the operation fails.
+     */
     public async update(req: Request, res: Response) {
         try {
             const comment1 = await commentService.findById(req.body.id)
@@ -37,6 +47,11 @@ class CommentController {
     }
 
 
+
+     /**
+     * Retrieves a specific comment by its ID.
+     * Responds with the comment object or an error if the comment is not found or the operation fails.
+     */
     public async getComment(req: Request, res: Response) {
         try {
 
@@ -52,6 +67,11 @@ class CommentController {
         }
     }
 
+
+     /**
+     * Retrieves all comments.
+     * Responds with an array of comments or an error if the operation fails.
+     */
     public async getAll(req: Request, res: Response) {
         try {
             const comments: CommentDocument[] = await commentService.findAll()
@@ -61,6 +81,11 @@ class CommentController {
         }
     }
 
+
+    /**
+     * Deletes a specific comment if it belongs to the user making the request.
+     * Responds with the deleted comment object or an error if the operation fails.
+     */
     public async delete(req: Request, res: Response) {
         try {
             const comment = await commentService.findById(req.body.id)
@@ -75,6 +100,11 @@ class CommentController {
         }
     }
 
+
+     /**
+     * Adds a reply to an existing reply in a comment thread.
+     * Responds with the updated reply object or an error if the operation fails.
+     */
     async addReplyToReply(req: Request, res: Response) {
         try {
             const reply = await commentService.addReply(req.params, req.body);
@@ -85,6 +115,11 @@ class CommentController {
         }
     }
 
+
+    /**
+     * Adds a reply to a specific comment.
+     * Responds with the updated comment object containing the reply or an error if the operation fails.
+     */
     public async addReplyToOne(req: Request, res: Response) {
         try {
             req.body.userId = req.params.id;
@@ -98,6 +133,11 @@ class CommentController {
         }
     }
 
+
+     /**
+     * Edits a specific reply in a comment thread.
+     * Responds with the updated reply object or an error if the operation fails.
+     */
     public async editReply(req: Request, res: Response) {
         try {
             console.log("ENTRA ENTRA ENTRA");
@@ -111,6 +151,11 @@ class CommentController {
     }
     
 
+
+    /**
+     * Deletes a specific reply from a comment thread.
+     * Responds with the updated comment object or an error if the operation fails.
+     */
     public async deleteReply(req: Request, res: Response) {
         try {
             const comment = await commentService.findById(req.params.commentId)
@@ -129,6 +174,12 @@ class CommentController {
         };
     }
 
+
+
+      /**
+     * Adds a reaction to a specific comment.
+     * Responds with the updated comment object containing the reaction or an error if the operation fails.
+     */
     async addReactionToComment(req: Request, res: Response) {
         try {
             const reaction = req.body;
@@ -142,6 +193,10 @@ class CommentController {
         }
     }
 
+    /**
+     * Adds a reaction to a specific reply within a comment thread.
+     * Responds with the updated reply object containing the reaction or an error if the operation fails.
+     */
     async addReactionToReply(req: Request, res: Response) {
         try {
             const { replyId } = req.params;
@@ -159,6 +214,11 @@ class CommentController {
         }
     }
 
+
+     /**
+     * Removes a reaction from a comment or reply, if the reaction belongs to the user making the request.
+     * Responds with the updated comment or reply object or an error if the operation fails.
+     */
     public async removeReaction(req: Request, res: Response){
         try {
             const comment = await commentService.findById(req.params.commentId)
@@ -177,6 +237,11 @@ class CommentController {
         }
     }
 
+
+    /**
+     * Edits a reaction in a comment or reply.
+     * Responds with the updated reaction object or an error if the operation fails.
+     */
     public async editReaction(req: Request, res: Response): Promise<Response> {
         try {
             const { commentId, replyId, reactionId } = req.params;

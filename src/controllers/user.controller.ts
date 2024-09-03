@@ -6,6 +6,11 @@ import {NotAuthorizedError, UserExistsError} from "../exceptions"
 
 class UserController {
     
+
+    /**
+     * Creates a new user.
+     * Responds with the created user object or an error if the user already exists or the operation fails.
+     */
     public async create (req: Request, res: Response) {
         try {
             const user: UserDocument = await userService.create(req.body as UserInput)
@@ -20,6 +25,11 @@ class UserController {
         }
     }
     
+
+    /**
+     * Updates an existing user by ID.
+     * Responds with the updated user object or an error if the user is not found or the operation fails.
+     */
     public async update (req: Request, res: Response) {
         try {
             const user: UserDocument | null = await userService.update(req.params.id, req.body as UserInput);
@@ -34,6 +44,11 @@ class UserController {
         }
     }
     
+
+    /**
+     * Retrieves a user by ID.
+     * Responds with the user object or an error if the user is not found or the operation fails.
+     */
     public async getUser (req: Request, res: Response) {
         try {
             const user: UserDocument | null = await userService.findById(req.params.id);
@@ -48,6 +63,11 @@ class UserController {
         }
     }
     
+
+    /**
+     * Retrieves all users.
+     * Responds with an array of user objects or an error if the operation fails.
+     */
     public async getAll (req: Request, res: Response) {
         try {
             const users: UserDocument[] = await userService.findAll()
@@ -58,6 +78,10 @@ class UserController {
     
     }
     
+ /**
+     * Deletes a user by ID.
+     * Responds with the deleted user object or an error if the operation fails.
+     */
     public async delete (req: Request, res: Response) {
         try {
             const users: UserDocument | null = await userService.delete(req.params.id)
@@ -67,6 +91,11 @@ class UserController {
         }
     }
 
+
+    /**
+     * Logs in a user with provided credentials.
+     * Responds with the user object or an error if the credentials are invalid or the operation fails.
+     */
     public async login (req: Request, res: Response) {
         try {
             const userObj = await userService.login(req.body);

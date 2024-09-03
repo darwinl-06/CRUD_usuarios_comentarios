@@ -1,5 +1,6 @@
 import {object, string} from "zod";
 
+// Define a schema for user input using zod
 const userSchema = object ({
     name: string({required_error: "Name is required"}),
     email: string({required_error: "Email is required"})
@@ -10,4 +11,5 @@ const userSchema = object ({
 
 })
 
+// Export the schema for use in other parts of the application
 export default userSchema;

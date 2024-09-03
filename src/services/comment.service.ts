@@ -1,9 +1,11 @@
+// Import Mongoose library for MongoDB interactions and types for Comment and related documents
 import mongoose from "mongoose";
 import { CommentDocument, IComment, IReaction, IReply } from "../models/comment.model";
 import CommentModel from "../models/comment.model";
 
 class CommentService {
 
+    // Create a new comment in the database
     public async createComment(commentInput: IComment): Promise<CommentDocument> {
         try {
             const comment = await CommentModel.create(commentInput);
@@ -13,6 +15,7 @@ class CommentService {
         }
     }
 
+     // Retrieve all comments from the database
     public async findAll(): Promise<CommentDocument[]> {
         try {
             const comments = await CommentModel.find();
@@ -22,6 +25,7 @@ class CommentService {
         }
     }
 
+      // Find a comment by its ID 
     public async findById(_id: string): Promise<CommentDocument | null> {
         try {
             const comment = await CommentModel.findById(_id);
@@ -31,6 +35,7 @@ class CommentService {
         }
     }
 
+    // Update a comment by its ID
     public async update(id: string, commentInput: IComment): Promise<CommentDocument | null> {
         try {
             const comment: CommentDocument | null = await CommentModel.findByIdAndUpdate(id, commentInput, { returnOriginal: false });
@@ -40,6 +45,7 @@ class CommentService {
         }
     }
 
+    // Delete a comment by its ID
     public async delete(id: string): Promise<CommentDocument | null> {
         try {
             const comment: CommentDocument | null = await CommentModel.findByIdAndDelete(id);
@@ -49,6 +55,7 @@ class CommentService {
         }
     }
 
+    // Add a reply to a specific comment
     public async addReplyToOne(commentId: string, replyInput: IComment, idUser: string): Promise<CommentDocument | null> {
         try {
             const updatedComment = await CommentModel.findByIdAndUpdate(commentId, {
@@ -68,6 +75,7 @@ class CommentService {
         }
     }
 
+    // Helper function to add a reply to a comment recursively
     private addReplyToComment(comments: CommentDocument[], commentId: string, reply: any): boolean {
 
         for (let comment of comments) {
@@ -91,6 +99,7 @@ class CommentService {
         return false;
     }
 
+    // Add a reply to a comment by its ID
     public async addReply(params: any, body: any) {
 
         const comment = await CommentModel.findById(params.commentId);
@@ -116,6 +125,7 @@ class CommentService {
         return reply;
     }
 
+     // Helper function to delete a reply from a comment recursively
     private deleteReplyToComment(comments: CommentDocument[], replyId: string): boolean {
         for (let comment of comments) {
             if (comment.id.toString() === replyId) {
@@ -135,6 +145,7 @@ class CommentService {
         return false;
     }
 
+    // Helper function to update a reply in comments recursively
     private async updateReplyInComments(comments: CommentDocument[], replyId: string, updatedReply: any): Promise<boolean> {
         for (let comment of comments) {
             // Verificar si el ID del comentario coincide con el ID de respuesta
@@ -159,6 +170,7 @@ class CommentService {
         return false;
     }
     
+     // Update a reply in a comment
     public async updateReply(params: any, body: any): Promise<CommentDocument | null> {
         const comment = await CommentModel.findById(params.commentId);
     
@@ -172,6 +184,7 @@ class CommentService {
         return comment;
     }
 
+    // Delete a reply from a comment
     public async deleteReply(params: any): Promise<CommentDocument | null> {
         const comment = await CommentModel.findById(params.commentId);
         if (!comment) throw new Error('Comment not found');
@@ -190,6 +203,7 @@ class CommentService {
 
     
     
+    // Add a reaction to a comment
     async addReactionToComment(commentId: string, reaction: any, idUser: string): Promise<any> {
         try {
             const commentIdParsed = new mongoose.Types.ObjectId(commentId);
@@ -214,7 +228,7 @@ class CommentService {
         }
     }
 
-    
+     // Helper function to add a reaction to a reply recursively
     private addReactionToReplyRecursive(replies: any[], replyId: string, reaction: any): boolean {
         for (let reply of replies) {
             if (reply._id.toString() == replyId) {
@@ -235,6 +249,7 @@ class CommentService {
         return false;
     }
 
+     // Add a reaction to a reply
     public async addReactionToReply(commentId: string, replyId: string, reaction: any): Promise<IReaction | null> {
         const comment = await CommentModel.findById(commentId);
 
@@ -252,6 +267,7 @@ class CommentService {
         return reaction;
     }
  
+    // Helper function to delete a reaction recursively
     private deleteReactionRecursive(replies: any[], replyId: string, reactionId: string): boolean {
         for (let reply of replies) {
             if (reply._id.toString() === replyId) {
@@ -272,6 +288,7 @@ class CommentService {
         return false;
     }
     
+     // Delete a reaction from a comment or reply
     public async deleteReaction(params: any): Promise<CommentDocument | null> {
         const { commentId, replyId, reactionId } = params;
         const comment = await CommentModel.findById(commentId);
@@ -293,6 +310,7 @@ class CommentService {
         return comment;
     }
     
+     // Helper function to update a reaction recursively
     private updateReactionRecursive(replies: any[], replyId: string, reactionId: string, updatedContent: string): boolean {
         for (let reply of replies) {
             if (reply._id.toString() === replyId) {
@@ -315,6 +333,7 @@ class CommentService {
         return false;
     }
     
+    // Update a reaction in a comment or reply
     public async updateReaction(params: any, updatedContent: string): Promise<CommentDocument | null> {
         const { commentId, replyId, reactionId } = params;
         const comment = await CommentModel.findById(commentId);
