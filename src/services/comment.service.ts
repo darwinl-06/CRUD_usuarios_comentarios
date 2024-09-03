@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { CommentDocument, IComment, IReaction, IReply } from "../models/comment.model";
 import CommentModel from "../models/comment.model";
+import { Console } from "console";
 
 class CommentService {
 
@@ -48,7 +49,7 @@ class CommentService {
             throw error;
         }
     }
-
+                                                                                                                                                                                 
     public async addReplyToOne(commentId: string, replyInput: IComment, idUser: string): Promise<CommentDocument | null> {
         try {
             const updatedComment = await CommentModel.findByIdAndUpdate(commentId, {
@@ -68,6 +69,7 @@ class CommentService {
         }
     }
 
+      /* 
     private addReplyToComment(comments: CommentDocument[], commentId: string, reply: any): boolean {
 
         for (let comment of comments) {
@@ -115,6 +117,7 @@ class CommentService {
         await comment.save();
         return reply;
     }
+    */
 
     private deleteReplyToComment(comments: CommentDocument[], replyId: string): boolean {
         for (let comment of comments) {
@@ -188,6 +191,54 @@ class CommentService {
         return comment;
     }
 
+    public async addNestedReply(commentId: string, replyId: string, replyInput: IReply, idUser: string): Promise<CommentDocument | null> {
+        try {
+            const comment = await CommentModel.findById(commentId);
+            if (!comment) throw new Error('Comment not found');
+        
+            const nestedReply: IReply = {
+                _id: new mongoose.Types.ObjectId(),
+                content: replyInput.content,
+                userId: new mongoose.Types.ObjectId(idUser),
+                replies: [],
+                reactions: []
+            };
+        
+            const added = this.addNestedReplyToComment(comment.replies as CommentDocument[], replyId, nestedReply);
+        
+            if (!added) throw new Error('Failed to add nested reply');
+        
+            comment.markModified('replies');
+
+            await comment.save();
+        
+            return comment;
+        } catch (error) {
+            console.error('Error adding nested reply:', error);
+            throw error;
+        }
+    }
+    
+
+    private addNestedReplyToComment(comments: CommentDocument[], replyId: string, nestedReply: IReply): boolean {
+        for (let comment of comments) {
+            if ((comment._id as string).toString() === replyId) {
+                if (!comment.replies) {
+                    comment.replies = [];
+                }
+                comment.replies.push(nestedReply);
+                return true;
+            }
+
+            if (comment.replies && comment.replies.length > 0) {
+                const added = this.addNestedReplyToComment(comment.replies as CommentDocument[], replyId, nestedReply);
+                if (added) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     
     
     async addReactionToComment(commentId: string, reaction: any, idUser: string): Promise<any> {
@@ -214,10 +265,23 @@ class CommentService {
         }
     }
 
-    
+    public async addReactionToReply(commentId: string, replyId: string, reaction: any): Promise<CommentDocument | null> {
+        const comment = await CommentModel.findById(commentId);
+
+        if (!comment) throw new Error('Comment not found');
+
+        const added = this.addReactionToReplyRecursive(comment.replies as CommentDocument[], replyId, reaction);
+
+        if (!added) throw new Error('Failed to add reaction to reply');
+
+        comment.markModified('replies');
+        await comment.save();
+        return comment;
+    }
+
     private addReactionToReplyRecursive(replies: any[], replyId: string, reaction: any): boolean {
         for (let reply of replies) {
-            if (reply._id.toString() == replyId) {
+            if (reply._id.toString() === replyId) {
                 if (!reply.reactions) {
                     reply.reactions = [];
                 }
@@ -235,6 +299,7 @@ class CommentService {
         return false;
     }
 
+    /*
     public async addReactionToReply(commentId: string, replyId: string, reaction: any): Promise<IReaction | null> {
         const comment = await CommentModel.findById(commentId);
 
@@ -251,6 +316,7 @@ class CommentService {
         await comment.save();
         return reaction;
     }
+    */
  
     private deleteReactionRecursive(replies: any[], replyId: string, reactionId: string): boolean {
         for (let reply of replies) {

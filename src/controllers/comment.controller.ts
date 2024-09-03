@@ -77,7 +77,7 @@ class CommentController {
 
     async addReplyToReply(req: Request, res: Response) {
         try {
-            const reply = await commentService.addReply(req.params, req.body);
+            const reply = await commentService.addNestedReply(req.params.commentId, req.params.replyId, req.body, req.params.id);
 
             return res.status(201).json(reply);
         } catch (error) {
