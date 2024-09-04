@@ -81,7 +81,7 @@ class UserService {
         try {
             const userExist = await this.findByEmail(userInput.email)
             if (!userExist)
-                throw new UserExistsError("Not authorized")
+                throw new UserExistsError("This user doesnt exist")
 
             const isMatch: boolean = await bcrypt.compare(userInput.password, userExist.password);
 
@@ -100,7 +100,7 @@ class UserService {
      // Generate a JSON Web Token for the user
     private generateToken(user: UserDocument): string {
         try {
-            return jwt.sign({user_id: user._id, email: user.email, name: user.name, role: user.role}, process.env.JWT_SECRET || "secret", {expiresIn: "10000m"});
+            return jwt.sign({user_id: user._id, email: user.email, name: user.name, role: user.role}, process.env.JWT_SECRET || "secret", {expiresIn: "50m"});
         } catch (error) {
             throw error;
         }

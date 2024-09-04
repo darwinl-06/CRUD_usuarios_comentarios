@@ -9,7 +9,7 @@ import authRole from "../middlewares/authRole";
 export const router = express.Router();
 
 
-router.post("/", validateSchema(userSchema),authRole(['superadmin']), userController.create); // Create user
+router.post("/", validateSchema(userSchema),auth, authRole(['superadmin']), userController.create); // Create user
 
 router.post("/login", userController.login); // Login user
 
