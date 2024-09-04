@@ -299,6 +299,8 @@ class CommentService {
             if (!deleted) throw new Error('Failed to delete reaction'); // Throw an error if deletion fails
         }
     
+        comment.markModified('replies'); // Mark the replies field as modified
+
         await comment.save(); // Save the updated comment
         return comment; // Return the updated comment
     }
@@ -342,6 +344,8 @@ class CommentService {
             if (!updated) throw new Error('Failed to update reaction'); // Throw an error if updating fails
         }
     
+        comment.markModified('replies'); // Mark the replies field as modified
+
         await comment.save(); // Save the updated comment
         return comment; // Return the updated comment
     }
