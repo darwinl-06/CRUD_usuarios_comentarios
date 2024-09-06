@@ -96,18 +96,23 @@ class CommentService {
         return false; // Indicate failure to delete
     }
 
-    // Private method to update a reply within comments
-    private async updateReplyInComments(comments: CommentDocument[], replyId: string, updatedReply: any): Promise<boolean> {
+    // Method to update a reply within comments
+    public async updateReplyInComments(comments: CommentDocument[], replyId: string, updatedReply: any): Promise<boolean> {
         for (let comment of comments) {
             if (comment.replies) {
                 for (let reply of comment.replies) {
-                    if (reply._id.equals(replyId)) { // Check if the reply ID matches
+                    if (reply._id.toString() === replyId) { // Check if the reply ID matches
                         reply.content = updatedReply.content; // Update the reply content
                         return true; // Indicate successful update
                     }
                 }
             }
-    
+
+            if (comment.id.toString() === replyId) { // Check if the comment ID matches the reply ID
+                comment.content = updatedReply.content; // Update the comment content
+                return true; // Indicate successful update
+            }
+
             if (comment.replies && comment.replies.length > 0) { // Recursively check replies
                 const updated = await this.updateReplyInComments(comment.replies as CommentDocument[], replyId, updatedReply);
                 if (updated) {
@@ -117,17 +122,15 @@ class CommentService {
         }
         return false; // Indicate failure to update
     }
-    
+
     // Method to update a reply in a comment
     public async updateReply(params: any, body: any): Promise<CommentDocument | null> {
         const comment = await CommentModel.findById(params.commentId); // Find the comment by ID
     
         if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
-    
         const updated = await this.updateReplyInComments(comment.replies as CommentDocument[], params.replyId, { content: body.content }); // Update the reply
-    
         if (!updated) throw new Error('Failed to update reply'); // Throw an error if updating fails
-    
+        comment.markModified('replies'); // Mark the replies field as modified
         await comment.save(); // Save the updated comment
         return comment; // Return the updated comment
     }
@@ -145,6 +148,8 @@ class CommentService {
     
         if (!deleted) throw new Error('Failed to delete reply'); // Throw an error if deletion fails
     
+        comment.markModified('replies'); // Mark the replies field as modified
+
         await comment.save(); // Save the updated comment
         return comment; // Return the updated comment
     }

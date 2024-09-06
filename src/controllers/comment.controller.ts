@@ -140,7 +140,6 @@ class CommentController {
      */
     public async editReply(req: Request, res: Response) {
         try {
-            console.log("ENTRA ENTRA ENTRA");
 
             const result = await commentService.updateReply(req.params, req.body);
             
