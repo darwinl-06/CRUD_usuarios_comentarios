@@ -309,18 +309,18 @@ class CommentService {
         await comment.save(); // Save the updated comment
         return comment; // Return the updated comment
     }
-    
+
     // Private method to recursively update a reaction
     private updateReactionRecursive(replies: any[], replyId: string, reactionId: string, updatedContent: string): boolean {
         for (let reply of replies) {
             if (reply._id.toString() === replyId) { // Check if the reply ID matches
                 const reaction = reply.reactions.find((reaction: any) => reaction._id.toString() === reactionId); // Find the reaction
-                if (reaction) {
+                if (reactionId) {
                     reaction.content = updatedContent; // Update the reaction content
                     return true; // Indicate successful update
                 }
             }
-    
+
             if (reply.replies && reply.replies.length > 0) { // Recursively check nested replies
                 const updated = this.updateReactionRecursive(reply.replies, replyId, reactionId, updatedContent);
                 if (updated) {
@@ -336,7 +336,7 @@ class CommentService {
         const { commentId, replyId, reactionId } = params; // Extract parameters
         const comment = await CommentModel.findById(commentId); // Find the comment by ID
         if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
-    
+
         if (!replyId) { // If no replyId, update the reaction in the comment itself
             const reaction = comment.reactions?.find((reaction: any) => reaction._id.toString() === reactionId); // Find the reaction
             if (reaction) {
@@ -348,9 +348,8 @@ class CommentService {
             const updated = this.updateReactionRecursive(comment.replies as CommentDocument[], replyId, reactionId, updatedContent); // Update the reaction
             if (!updated) throw new Error('Failed to update reaction'); // Throw an error if updating fails
         }
-    
-        comment.markModified('replies'); // Mark the replies field as modified
 
+        comment.markModified('replies'); // Mark the replies field as modified
         await comment.save(); // Save the updated comment
         return comment; // Return the updated comment
     }
