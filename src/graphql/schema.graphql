@@ -1,0 +1,108 @@
+input LoginInput {
+    email: String!
+    password: String!
+}
+
+input LoggedUser {
+    name: String
+    email: String
+    token: String
+}
+
+type User {
+    id: ID!
+    name: String
+    email: String
+    password: String
+    role: String
+}
+
+input UserInput {
+    name: String
+    email: String
+    password: String
+    role: String
+}
+
+type Comment {
+    id: ID!
+    content: String
+    userId: String
+    replies: [Reply]
+    reactions: [Reaction]
+}
+
+input CommentInput {
+    content: String
+}
+
+type Reaction {
+    id: ID!
+    content: String
+    userId: String
+}
+
+input DeleteReaction {
+    commentId: ID!
+    replyId: ID!
+    reactionId: ID!
+}
+
+input ReactionUpdateInput {
+    commentId: ID!
+    replyId: ID
+    reactionId: ID!
+}
+
+input ReactionInput {
+    content: String
+}
+
+type Reply {
+    id: ID!
+    content: String
+    userId: String
+    replies: [Reply]
+    reactions: [Reaction]
+}
+
+input ReplyInput {
+    content: String
+}
+
+input ReplyUpdateInput {
+    commentId: ID!
+    replyId: ID!
+}
+
+input DeleteReply {
+    commentId: ID!
+    replyId: ID!
+}
+
+type Query {
+    user(id: ID!): User
+    users: [User]
+    userByEmail(email: String!): User
+    comment(id: ID!): Comment
+    comments: [Comment]
+}
+
+type Mutation {
+    login(input: LoginInput): User
+    createUser(input: UserInput!): User
+    updateUser(id: String!, input: UserInput!): User
+    deleteUser(id: ID!): User
+    createComment(userId: ID, input: CommentInput): Comment
+    updateComment(id: ID!, content: CommentInput): Comment
+    deleteComment(id: ID!): Comment
+    addReply(commentId: ID!, reply: ReplyInput, userId: ID): Reply
+    addReplyToReply(commentId: ID!, replyId: ID!, reply: ReplyInput, userId: ID): Reply
+    deleteReply(body: DeleteReply): Reply
+    updateReply(body: ReplyUpdateInput, content: ReplyInput): Reply
+    addReaction(commentId: ID!, reaction: ReactionInput, userId: ID): Reaction
+    addReactionToReply(commentId: ID!, replyId: ID!, reaction: ReactionInput, userId: ID): Reaction
+    deleteReaction(body: DeleteReaction): Reaction
+    updateReaction(reaction: ReactionUpdateInput, content: String): Reaction
+}
+

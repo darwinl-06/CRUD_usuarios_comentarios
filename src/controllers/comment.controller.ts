@@ -123,6 +123,7 @@ class CommentController {
     public async addReplyToOne(req: Request, res: Response) {
         try {
             req.body.userId = req.params.id;
+            console.log(req);
             const updatedComment = await commentService.addReplyToOne(req.params.commentId, req.body as IComment, req.params.id);
             if (!updatedComment) {
                 return res.status(404).json({ error: "Comment not found" });
@@ -158,8 +159,6 @@ class CommentController {
     public async deleteReply(req: Request, res: Response) {
         try {
             const comment = await commentService.findById(req.params.commentId)
-            console.log(comment?.userId.toString());
-            console.log(req.params.id);
             if (req.params.id != comment?.userId.toString()) {
                 res.status(400).json({ message: `Not Your Comment` })
                 return;
@@ -207,7 +206,7 @@ class CommentController {
                 userId: req.params.id
             };
 
-            const result = await commentService.addReactionToReply(req.params.commentId, req.params.replyId, reaction);
+            const result = await commentService.addReactionToReply(req.params.commentId, req.params.replyId, reaction, req.params.id);
 
             return res.status(201).json(result);
         } catch (error) {

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt, { TokenExpiredError } from "jsonwebtoken"
+import jwt from "jsonwebtoken"
 
 
 /**
@@ -7,7 +7,7 @@ import jwt, { TokenExpiredError } from "jsonwebtoken"
  * Extracts the token from the Authorization header, verifies it, and attaches the decoded user info to the request.
  * If the token is missing, expired, or invalid, responds with a 401 Unauthorized status.
  */
-const auth = async (req: Request, res: Response, next: NextFunction) => {
+const auth = async (req: Request, res: Response) => {
     try {
         let token: string | undefined = req.headers.authorization;
 
@@ -23,12 +23,12 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
             req.params.id = decoded.user_id;
             req.params.role = decoded.role;
 
-            next();// Proceed to the next middleware or route handler
+            
         }
 
         
     } catch (error) {
-        if (error instanceof TokenExpiredError)
+        if (error instanceof jwt.TokenExpiredError)
             res.status(401).json({message: "Token Expired", error})
         else
             res.status(401).json({message: "Token Invalid", error})

@@ -230,8 +230,10 @@ class CommentService {
     }
 
     // Method to add a reaction to a reply
-    public async addReactionToReply(commentId: string, replyId: string, reaction: any): Promise<CommentDocument | null> {
+    public async addReactionToReply(commentId: string, replyId: string, reaction: any, idUser: String): Promise<CommentDocument | null> {
         const comment = await CommentModel.findById(commentId); // Find the comment by ID
+        
+        reaction.userId = idUser;
 
         if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
 

@@ -39,7 +39,7 @@ const reactionSchema = new mongoose.Schema({
 const replySchema = new mongoose.Schema({
     content: { type: String, required: true },
     userId: { type: mongoose.Types.ObjectId, required: true },
-    replies: [this], 
+    replies: [], 
     reactions: [reactionSchema]
 });
 

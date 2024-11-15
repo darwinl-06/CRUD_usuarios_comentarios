@@ -8,7 +8,6 @@ import authRole from "../middlewares/authRole";
 
 export const router = express.Router();
 
-
 router.post("/", validateSchema(userSchema),auth, authRole(['superadmin']), userController.create); // Create user
 
 router.post("/login", userController.login); // Login user
@@ -52,3 +51,4 @@ router.delete('/comments/:commentId/reaction/:reactionId/:replyId?', auth, comme
 
 router.put('/comments/:commentId/reaction/:reactionId/:replyId?', auth, commentController.editReaction); //Edit Reaction
 
+ 
