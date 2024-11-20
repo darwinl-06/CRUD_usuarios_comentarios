@@ -21,6 +21,25 @@ const validateCommentOwnership = async (commentId: string, userId: string) => {
     }
 };
 
+const validateReplyOwnership = async (replyId: string, userId: string) => {
+    const reply = await commentService.findById(replyId);
+    if (reply?.userId.toString() !== userId) {
+        throw new GraphQLError("Not Your Comment", {
+            extensions: { code: "FORBIDDEN" }
+        });
+    }
+};
+
+const validateReactionOwnership = async (reactionId: string, userId: string) => {
+    const reaction = await commentService.findById(reactionId);
+    if (reaction?.userId.toString() !== userId) {
+        throw new GraphQLError("Not Your Comment", {
+            extensions: { code: "FORBIDDEN" }
+        });
+    }
+};
+
+
 export const resolvers = {
     Query: {
         user: async (_root: any, params: any) => {
@@ -166,8 +185,9 @@ export const resolvers = {
             }
         },
 
-        deleteReply: async (_root: any, params: any) => {
+        deleteReply: async (_root: any, params: any, context: any) => {
             try {
+                await validateReplyOwnership(params.body.replyId , context.user.user_id);
                 const comment: CommentDocument | null = await commentService.deleteReply(params.body);
                 if (!comment) throw new GraphQLError("Respuesta no encontrada para eliminar", { extensions: { code: "NOT_FOUND" } });
                 return comment;
@@ -176,8 +196,9 @@ export const resolvers = {
             }
         },
 
-        updateReply: async (_root: any, params: any) => {
+        updateReply: async (_root: any, params: any, context: any) => {
             try {
+                await validateReplyOwnership(params.body.replyId , context.user.user_id);
                 const comment: CommentDocument | null = await commentService.updateReply(params.body, params.content);
                 if (!comment) throw new GraphQLError("Respuesta no encontrada para actualizar", { extensions: { code: "NOT_FOUND" } });
                 return comment;
@@ -206,8 +227,9 @@ export const resolvers = {
             }
         },
 
-        deleteReaction: async (_root: any, params: any) => {
+        deleteReaction: async (_root: any, params: any, context: any) => {
             try {
+                await validateReactionOwnership(params.body.reactionId , context.user.user_id);
                 const comment: CommentDocument | null = await commentService.deleteReaction(params.body);
                 if (!comment) throw new GraphQLError("Reacción no encontrada para eliminar", { extensions: { code: "NOT_FOUND" } });
                 return comment;
@@ -216,8 +238,9 @@ export const resolvers = {
             }
         },
 
-        updateReaction: async (_root: any, params: any) => {
+        updateReaction: async (_root: any, params: any, context: any) => {
             try {
+                await validateReactionOwnership(params.body.reactionId , context.user.user_id);
                 const comment: CommentDocument | null = await commentService.updateReaction(params.reaction, params.content);
                 if (!comment) throw new GraphQLError("Reacción no encontrada para actualizar", { extensions: { code: "NOT_FOUND" } });
                 return comment;
@@ -226,4 +249,4 @@ export const resolvers = {
             }
         }
     }
-};
+}; 
