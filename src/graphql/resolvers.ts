@@ -3,6 +3,7 @@ import { CommentDocument } from "../models/comment.model";
 import userService from "../services/user.service";
 import commentService from "../services/comment.service";
 import { GraphQLError } from "graphql";
+import { Console } from "node:console";
 
 const checkRole = (requiredRoles: string[], role: string) => {
     if (!requiredRoles.includes(role)) {
@@ -21,8 +22,8 @@ const validateCommentOwnership = async (commentId: string, userId: string) => {
     }
 };
 
-const validateReplyOwnership = async (replyId: string, userId: string) => {
-    const reply = await commentService.findById(replyId);
+const validateReplyOwnership = async (commentId: string, replyId: string, userId: string) => {
+    const reply = await commentService.findReplyById(commentId, replyId);
     if (reply?.userId.toString() !== userId) {
         throw new GraphQLError("Not Your Comment", {
             extensions: { code: "FORBIDDEN" }
@@ -30,8 +31,8 @@ const validateReplyOwnership = async (replyId: string, userId: string) => {
     }
 };
 
-const validateReactionOwnership = async (reactionId: string, userId: string) => {
-    const reaction = await commentService.findById(reactionId);
+const validateReactionOwnership = async (commentId: string, reactionId: string, userId: string) => {
+    const reaction = await commentService.findReactionById(commentId, reactionId);
     if (reaction?.userId.toString() !== userId) {
         throw new GraphQLError("Not Your Comment", {
             extensions: { code: "FORBIDDEN" }
@@ -95,6 +96,7 @@ export const resolvers = {
         login: async (_root: any, params: any) => {
             try {
                 const userOutput = await userService.login(params.input);
+                console.log(userOutput);
                 return userOutput;
             } catch (error) {
                 throw new GraphQLError(`Error en el inicio de sesión: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
@@ -169,6 +171,8 @@ export const resolvers = {
             try {
                 params.userId = context.user.user_id;
                 const comment: CommentDocument | null = await commentService.addReplyToOne(params.commentId, params.reply, params.userId);
+
+                console.log(comment);
                 return comment;
             } catch (error) {
                 throw new GraphQLError(`Error al agregar la respuesta: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
@@ -187,7 +191,7 @@ export const resolvers = {
 
         deleteReply: async (_root: any, params: any, context: any) => {
             try {
-                await validateReplyOwnership(params.body.replyId , context.user.user_id);
+                await validateReplyOwnership(params.body.commentId, params.body.replyId , context.user.user_id);
                 const comment: CommentDocument | null = await commentService.deleteReply(params.body);
                 if (!comment) throw new GraphQLError("Respuesta no encontrada para eliminar", { extensions: { code: "NOT_FOUND" } });
                 return comment;
@@ -198,7 +202,10 @@ export const resolvers = {
 
         updateReply: async (_root: any, params: any, context: any) => {
             try {
-                await validateReplyOwnership(params.body.replyId , context.user.user_id);
+                console.log(params.body.replyId);
+                console.log(context.user.user_id);
+                await validateReplyOwnership(params.body.commentId, params.body.replyId , context.user.user_id);
+
                 const comment: CommentDocument | null = await commentService.updateReply(params.body, params.content);
                 if (!comment) throw new GraphQLError("Respuesta no encontrada para actualizar", { extensions: { code: "NOT_FOUND" } });
                 return comment;
@@ -211,6 +218,7 @@ export const resolvers = {
             try {
                 params.userId = context.user.user_id;
                 const comment: CommentDocument | null = await commentService.addReactionToComment(params.commentId, params.reaction, params.userId);
+                console.log(comment);
                 return comment;
             } catch (error) {
                 throw new GraphQLError(`Error al agregar la reacción: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
@@ -229,7 +237,7 @@ export const resolvers = {
 
         deleteReaction: async (_root: any, params: any, context: any) => {
             try {
-                await validateReactionOwnership(params.body.reactionId , context.user.user_id);
+                await validateReactionOwnership(params.body.commentId, params.body.reactionId , context.user.user_id);
                 const comment: CommentDocument | null = await commentService.deleteReaction(params.body);
                 if (!comment) throw new GraphQLError("Reacción no encontrada para eliminar", { extensions: { code: "NOT_FOUND" } });
                 return comment;
@@ -240,7 +248,7 @@ export const resolvers = {
 
         updateReaction: async (_root: any, params: any, context: any) => {
             try {
-                await validateReactionOwnership(params.body.reactionId , context.user.user_id);
+                await validateReactionOwnership(params.reaction.commentId, params.reaction.reactionId , context.user.user_id);
                 const comment: CommentDocument | null = await commentService.updateReaction(params.reaction, params.content);
                 if (!comment) throw new GraphQLError("Reacción no encontrada para actualizar", { extensions: { code: "NOT_FOUND" } });
                 return comment;

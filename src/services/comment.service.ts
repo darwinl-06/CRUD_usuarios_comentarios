@@ -55,6 +55,36 @@ class CommentService {
             throw error; // Propagate any errors
         }
     }
+
+    // Method to find a reply by its ID
+    public async findReplyById(commentId: string, replyId: string): Promise<IReply | null> {
+        try {
+            const comment = await CommentModel.findById(commentId); // Find the comment by ID
+            if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
+
+            const reply = this.findReplyByIdRecursive(comment.replies as CommentDocument[], replyId); // Find the reply by ID
+            return reply; // Return the found reply or null if not found
+        } catch (error) {
+            throw error; // Propagate any errors
+        }
+    }
+
+    // Private method to recursively find a reply by its ID
+    private findReplyByIdRecursive(replies: any[], replyId: string): IReply | null {
+        for (let reply of replies) {
+            if (reply._id.toString() === replyId) { // Check if the reply ID matches
+                return reply; // Return the found reply
+            }
+
+            if (reply.replies && reply.replies.length > 0) { // Recursively check nested replies
+                const foundReply = this.findReplyByIdRecursive(reply.replies, replyId);
+                if (foundReply) {
+                    return foundReply; // Return the found reply
+                }
+            }
+        }
+        return null; // Indicate failure to find
+    }
                                                                                                                                                  
     // Method to add a reply to a specific comment
     public async addReplyToOne(commentId: string, replyInput: IComment, idUser: string): Promise<CommentDocument | null> {
@@ -203,6 +233,42 @@ class CommentService {
         }
         return false; // Indicate failure to add
     }
+
+    // Method to find a reaction by its ID
+    public async findReactionById(commentId: string, reactionId: string): Promise<IReaction | null> {
+        try {
+            const comment = await CommentModel.findById(commentId); // Find the comment by ID
+            if (!comment) throw new Error('Comment not found'); // Throw an error if the comment is not found
+
+            const reaction = comment.reactions?.find((reaction: any) => reaction._id.toString() === reactionId); // Find the reaction by ID
+            if (reaction) {
+                return reaction; // Return the found reaction
+            }
+
+            const foundReaction = this.findReactionByIdRecursive(comment.replies as CommentDocument[], reactionId); // Recursively find the reaction in replies
+            return foundReaction; // Return the found reaction or null if not found
+        } catch (error) {
+            throw error; // Propagate any errors
+        }
+    }
+
+    // Private method to recursively find a reaction by its ID
+    private findReactionByIdRecursive(replies: any[], reactionId: string): IReaction | null {
+        for (let reply of replies) {
+            const reaction = reply.reactions?.find((reaction: any) => reaction._id.toString() === reactionId); // Find the reaction by ID
+            if (reaction) {
+                return reaction; // Return the found reaction
+            }
+
+            if (reply.replies && reply.replies.length > 0) { // Recursively check nested replies
+                const foundReaction = this.findReactionByIdRecursive(reply.replies, reactionId);
+                if (foundReaction) {
+                    return foundReaction; // Return the found reaction
+                }
+            }
+        }
+        return null; // Indicate failure to find
+    }
     
     // Method to add a reaction to a comment
     async addReactionToComment(commentId: string, reaction: any, idUser: string): Promise<any> {
@@ -220,7 +286,7 @@ class CommentService {
             );
 
             if (result) {
-                return { success: true, data: result }; // Return success result
+                return result; // Return success result
             } else {
                 return { success: false, message: 'Comment not found' }; // Return failure result if comment not found
             }

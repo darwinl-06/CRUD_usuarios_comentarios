@@ -17,6 +17,12 @@ type User {
     role: String
 }
 
+type UserOutput {
+    email: String
+    name: String
+    token: String
+}
+
 input UserInput {
     name: String
     email: String
@@ -89,7 +95,7 @@ type Query {
 }
 
 type Mutation {
-    login(input: LoginInput): User
+    login(input: LoginInput): UserOutput
     createUser(input: UserInput!): User
     updateUser(id: String!, input: UserInput!): User
     deleteUser(id: ID!): User
@@ -100,9 +106,9 @@ type Mutation {
     addReplyToReply(commentId: ID!, replyId: ID!, reply: ReplyInput, userId: ID): Reply
     deleteReply(body: DeleteReply): Reply
     updateReply(body: ReplyUpdateInput, content: ReplyInput): Reply
-    addReaction(commentId: ID!, reaction: ReactionInput, userId: ID): Reaction
-    addReactionToReply(commentId: ID!, replyId: ID!, reaction: ReactionInput, userId: ID): Reaction
-    deleteReaction(body: DeleteReaction): Reaction
-    updateReaction(reaction: ReactionUpdateInput, content: String): Reaction
+    addReaction(commentId: ID!, reaction: ReactionInput, userId: ID): Comment
+    addReactionToReply(commentId: ID!, replyId: ID!, reaction: ReactionInput, userId: ID): Comment
+    deleteReaction(body: DeleteReaction): Comment
+    updateReaction(reaction: ReactionUpdateInput, content: String): Comment
 }
 
