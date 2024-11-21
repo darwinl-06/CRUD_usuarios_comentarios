@@ -1,0 +1,47 @@
+# Fragmentos para los campos de usuario
+fragment UserFields on User {
+    id
+    name
+    email
+    role
+}
+
+# Fragmento para los campos de salida de usuario (UserOutput)
+fragment UserOutputFields on UserOutput {
+    email
+    name
+    token
+}
+
+# Fragmentos para los campos de comentarios
+fragment CommentFields on Comment {
+    id
+    content
+    userId
+    replies {
+        ...ReplyFields
+    }
+    reactions {
+        ...ReactionFields
+    }
+}
+
+# Fragmentos para los campos de reacciones
+fragment ReactionFields on Reaction {
+    id
+    content
+    userId
+}
+
+# Fragmentos para los campos de respuestas
+fragment ReplyFields on Reply {
+    id
+    content
+    userId
+    replies {
+        ...ReplyFields
+    }
+    reactions {
+        ...ReactionFields
+    }
+}

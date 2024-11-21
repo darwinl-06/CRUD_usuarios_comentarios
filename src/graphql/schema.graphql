@@ -1,114 +1,130 @@
+# Input type for user login
 input LoginInput {
-    email: String!
-    password: String!
+    email: String!   # The email of the user (required)
+    password: String! # The password of the user (required)
 }
 
+# Input type for a logged user
 input LoggedUser {
-    name: String
-    email: String
-    token: String
+    name: String      # Name of the logged-in user
+    email: String     # Email of the logged-in user
+    token: String     # Authentication token for the user
 }
 
+# Type representing a user
 type User {
-    id: ID!
-    name: String
-    email: String
-    password: String
-    role: String
+    id: ID!           # Unique identifier of the user
+    name: String      # Name of the user
+    email: String     # Email address of the user
+    password: String  # Password of the user
+    role: String      # Role assigned to the user (e.g., admin, user)
 }
 
+# Output type for user login
 type UserOutput {
-    email: String
-    name: String
-    token: String
+    email: String     # Email address of the logged-in user
+    name: String      # Name of the logged-in user
+    token: String     # Authentication token
 }
 
+# Input type for creating or updating a user
 input UserInput {
-    name: String
-    email: String
-    password: String
-    role: String
+    name: String      # Name of the user
+    email: String     # Email address of the user
+    password: String  # Password of the user
+    role: String      # Role of the user
 }
 
+# Type representing a comment
 type Comment {
-    id: ID!
-    content: String
-    userId: String
-    replies: [Reply]
-    reactions: [Reaction]
+    id: ID!           # Unique identifier of the comment
+    content: String   # Content of the comment
+    userId: String    # ID of the user who created the comment
+    replies: [Reply]  # List of replies to the comment
+    reactions: [Reaction] # List of reactions to the comment
 }
 
+# Input type for creating or updating a comment
 input CommentInput {
-    content: String
+    content: String   # Content of the comment
 }
 
+# Type representing a reaction
 type Reaction {
-    id: ID!
-    content: String
-    userId: String
+    id: ID!           # Unique identifier of the reaction
+    content: String   # Content of the reaction
+    userId: String    # ID of the user who reacted
 }
 
+# Input type for deleting a reaction
 input DeleteReaction {
-    commentId: ID!
-    replyId: ID!
-    reactionId: ID!
+    commentId: ID!    # ID of the comment containing the reaction
+    replyId: ID!      # ID of the reply containing the reaction
+    reactionId: ID!   # ID of the reaction to delete
 }
 
+# Input type for updating a reaction
 input ReactionUpdateInput {
-    commentId: ID!
-    replyId: ID
-    reactionId: ID!
+    commentId: ID!    # ID of the comment containing the reaction
+    replyId: ID       # ID of the reply containing the reaction (optional)
+    reactionId: ID!   # ID of the reaction to update
 }
 
+# Input type for creating a reaction
 input ReactionInput {
-    content: String
+    content: String   # Content of the reaction
 }
 
+# Type representing a reply
 type Reply {
-    id: ID!
-    content: String
-    userId: String
-    replies: [Reply]
-    reactions: [Reaction]
+    id: ID!           # Unique identifier of the reply
+    content: String   # Content of the reply
+    userId: String    # ID of the user who created the reply
+    replies: [Reply]  # Nested replies
+    reactions: [Reaction] # List of reactions to the reply
 }
 
+# Input type for creating or updating a reply
 input ReplyInput {
-    content: String
+    content: String   # Content of the reply
 }
 
+# Input type for updating a reply
 input ReplyUpdateInput {
-    commentId: ID!
-    replyId: ID!
+    commentId: ID!    # ID of the comment containing the reply
+    replyId: ID!      # ID of the reply to update
 }
 
+# Input type for deleting a reply
 input DeleteReply {
-    commentId: ID!
-    replyId: ID!
+    commentId: ID!    # ID of the comment containing the reply
+    replyId: ID!      # ID of the reply to delete
 }
 
+# Query definitions
 type Query {
-    user(id: ID!): User
-    users: [User]
-    userByEmail(email: String!): User
-    comment(id: ID!): Comment
-    comments: [Comment]
+    user(id: ID!): User              # Fetches a user by their ID
+    users: [User]                   # Fetches all users
+    userByEmail(email: String!): User # Fetches a user by their email
+    comment(id: ID!): Comment        # Fetches a comment by its ID
+    comments: [Comment]             # Fetches all comments
 }
 
+# Mutation definitions
 type Mutation {
-    login(input: LoginInput): UserOutput
-    createUser(input: UserInput!): User
-    updateUser(id: String!, input: UserInput!): User
-    deleteUser(id: ID!): User
-    createComment(userId: ID, input: CommentInput): Comment
-    updateComment(id: ID!, content: CommentInput): Comment
-    deleteComment(id: ID!): Comment
-    addReply(commentId: ID!, reply: ReplyInput, userId: ID): Reply
-    addReplyToReply(commentId: ID!, replyId: ID!, reply: ReplyInput, userId: ID): Reply
-    deleteReply(body: DeleteReply): Reply
-    updateReply(body: ReplyUpdateInput, content: ReplyInput): Reply
-    addReaction(commentId: ID!, reaction: ReactionInput, userId: ID): Comment
-    addReactionToReply(commentId: ID!, replyId: ID!, reaction: ReactionInput, userId: ID): Comment
-    deleteReaction(body: DeleteReaction): Comment
-    updateReaction(reaction: ReactionUpdateInput, content: String): Comment
+    login(input: LoginInput): UserOutput  # Authenticates a user and returns their data
+    createUser(input: UserInput!): User   # Creates a new user
+    updateUser(id: String!, input: UserInput!): User # Updates an existing user
+    deleteUser(id: ID!): User             # Deletes a user by their ID
+    createComment(userId: ID, input: CommentInput): Comment # Creates a new comment
+    updateComment(id: ID!, content: CommentInput): Comment  # Updates an existing comment
+    deleteComment(id: ID!): Comment       # Deletes a comment by its ID
+    addReply(commentId: ID!, reply: ReplyInput, userId: ID): Reply # Adds a reply to a comment
+    addReplyToReply(commentId: ID!, replyId: ID!, reply: ReplyInput, userId: ID): Reply # Adds a nested reply
+    deleteReply(body: DeleteReply): Reply # Deletes a reply
+    updateReply(body: ReplyUpdateInput, content: ReplyInput): Reply # Updates an existing reply
+    addReaction(commentId: ID!, reaction: ReactionInput, userId: ID): Comment # Adds a reaction to a comment
+    addReactionToReply(commentId: ID!, replyId: ID!, reaction: ReactionInput, userId: ID): Comment # Adds a reaction to a reply
+    deleteReaction(body: DeleteReaction): Comment # Deletes a reaction
+    updateReaction(reaction: ReactionUpdateInput, content: String): Comment # Updates an existing reaction
 }
-

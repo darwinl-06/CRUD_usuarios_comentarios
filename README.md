@@ -54,29 +54,32 @@ Implementa un manejo de errores robusto para capturar y registrar excepciones de
 
 ```json
 "dependencies": {
+    "@apollo/server": "^4.11.2",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.8.0",
     "mongoose": "^8.5.2",
-    "nodeapp": "file:",
+    "yarn": "^1.22.22",
     "zod": "^3.23.8"
-}
+  }
 ```
 
 ### Dependencias de Desarrollo
 
 ```json
-"devDependencies": {
+ "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^22.1.0",
+    "@types/node": "^22.0.2",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.5.4"
-}
+  }
 ```
 
 ### Instalación
@@ -150,82 +153,51 @@ Para garantizar la ejecución adecuada de las operaciones y la protección de lo
 
 Estas medidas aseguran que el sistema funcione de manera segura y eficiente, manteniendo los permisos adecuados y protegiendo la información de los usuarios.
 
+---
 
-### Nota
-Se utilizo un solo archivo para las rutas de los usuarios y comentarios.
+## Queries
 
-### Rutas de Usuarios (`users.router.ts`)
-
-Estas rutas gestionan las operaciones relacionadas con los usuarios:
-
-- `POST /login` - Iniciar sesión.
-- `GET /id` - Obtener usuario por id.
-- `GET /` - Obtener todos los usuarios.
-- `GET /profile` - Comprobar que el usuario es existente.
-- `POST /` - Crear un nuevo usuario.
-- `PUT /:id` - Actualizar un usuario existente.
-- `DELETE /:id` - Eliminar un usuario.
-
-### Rutas de Comentarios  (`users.router.ts`) 
-
-Estas rutas gestionan todas las operaciones relacionadas con los comentarios en la API:
-
-### Nota:
-Para facilitar la busqueda, muchos de los metodos se les pasa por parametro el id para no tener que hacerlo por la ruta, como ejemplo estan el put y el delete de los comentarios
-
-- `GET /comments` - Obtener todos los comentarios.
-- `POST /comments` - Crear un nuevo comentario.
-- `PUT /comments` - Actualizar un comentario existente.
-- `DELETE /comments` - Eliminar un comentario.
-
-#### Comentarios Anidados
-
-- `POST /comments/:commentId/replies/:replyId` - Crear un comentario anidado sobre un comentario añadido .
-- `POST /comments/:commentId/replies/` - Crear el primer comentario anidado.
-- `PUT /comments/:commentId/replies/:replyId` - Editar un comentario anidado.
-- `DELETE /comments/:commentId/replies/:replyId` - Eliminar un comentario anidado.
-
-
-#### Reacciones a Comentarios
-
-- `POST /comments/:commentId/reaction` - Reaccionar a un comentario.
-- `DELETE /:id/reactions/:reactionId` - Quitar una reacción de un comentario.
-
-#### Reacciones a Comentarios Anidados
-
-- `POST /comments/:commentId/reaction/:replyId` - Reaccionar a un comentario anidado.
-- `DELETE /comments/:commentId/reaction/:reactionId/:replyId?` - Quitar una reacción de un comentario anidado.
-- `Put /comments/:commentId/reaction/:reactionId/:replyId?` - Editar una reaccion de un comentario
+- **`users`**: Obtiene lista de usuarios.
+- **`user(id: ID!)`**: Obtiene un usuario específico por ID.
+- **`userByEmail(email: String!)`**: Obtiene un usuario por correo.
+- **`comments`**: Obtiene todos los comentarios.
+- **`comment(id: ID!)`**: Obtiene un comentario específico por ID.
 
 ---
 
-### Resumen API RESTful
+## Mutations
 
-### Rutas de `users.router.ts`
+- **`login(input: LoginInput!)`**: Inicia sesión.
 
-| NAME                   | PATH                                            | HTTP VERB | PURPOSE                          |
-|------------------------|-------------------------------------------------|-----------|----------------------------------|
-| Login                  | `/login`                                        | POST      | Login                            |
-| Get User by ID         | `/id`                                           | GET       | Get user by ID                   |
-| Get Users              | `/`                                             | GET       | Get all users                    |
-| Get Profile            | `/profile`                                      | GET       | Check if user exists             |
-| Create User            | `/`                                             | POST      | Create a new user                |
-| Update User            | `/:id`                                          | PUT       | Update a user                    |
-| Delete User            | `/:id`                                          | DELETE    | Delete a user                    |
-| Get Comments           | `/comments`                                     | GET       | Get all comments                 |
-| Create Comment         | `/comments`                                     | POST      | Create a new comment             |
-| Update Comment         | `/comments`                                     | PUT       | Update a comment                 |
-| Delete Comment         | `/comments`                                     | DELETE    | Delete a comment                 |
-| Create Nested Comment  | `/comments/:commentId/replies/:replyId`         | POST      | Create a nested comment          |
-| Create First Nested Comment | `/comments/:commentId/replies/`            | POST      | Create the first nested comment  |
-| Update Nested Comment  | `/comments/:commentId/replies/:replyId`         | PUT       | Edit a nested comment            |
-| Delete Nested Comment  | `/comments/:commentId/replies/:replyId`         | DELETE    | Delete a nested comment          |
-| React to Comment       | `/comments/:commentId/reaction`                 | POST      | React to a comment               |
-| Unreact Comment        | `/:id/reactions/:reactionId`                    | DELETE    | Remove a reaction from a comment |
-| React to Nested Comment | `/comments/:commentId/reaction/:replyId`        | POST      | React to a nested comment        |
-| Unreact Nested Comment | `/comments/:commentId/reaction/:reactionId/:replyId?` | DELETE    | Remove a reaction from a nested comment |
-| Edit Reaction to Nested Comment | `/comments/:commentId/reaction/:reactionId/:replyId?` | PUT | Edit a reaction to a nested comment |
+- **`createUser(input: UserInput!)`**: Crea un usuario (requiere rol `superadmin`).
 
+- **`updateUser(id: String!, input: UserInput!)`**: Actualiza un usuario (requiere rol `superadmin`).
+
+- **`deleteUser(id: ID!)`**: Elimina un usuario (requiere rol `superadmin`).
+
+- **`createComment(input: CommentInput!)`**: Crea un comentario.
+
+- **`updateComment(id: ID!, content: CommentInput!)`**: Actualiza un comentario (requiere ser el dueño).
+
+- **`deleteComment(id: ID!)`**: Elimina un comentario (requiere ser el dueño).
+
+- **`addReply(commentId: ID!, reply: ReplyInput!)`**: Agrega una respuesta a un comentario.
+
+- **`addReplyToReply(commentId: ID!, replyId: ID!, reply: ReplyInput!)`**: Agrega una respuesta anidada.
+
+- **`deleteReply(body: DeleteReply!)`**: Elimina una respuesta (requiere ser el dueño).
+
+- **`updateReply(body: ReplyUpdateInput!, content: ReplyInput!)`**: Actualiza una respuesta (requiere ser el dueño).
+
+- **`addReaction(commentId: ID!, reaction: ReactionInput!)`**: Agrega una reacción a un comentario.
+
+- **`addReactionToReply(commentId: ID!, replyId: ID!, reaction: ReactionInput!)`**: Agrega una reacción a una respuesta.
+
+- **`deleteReaction(body: DeleteReaction!)`**: Elimina una reacción (requiere ser el dueño).
+
+- **`updateReaction(reaction: ReactionUpdateInput!, content: String!)`**: Actualiza una reacción (requiere ser el dueño).
+
+--- 
 
 ## Dificultades y problemas Encontrados
 

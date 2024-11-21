@@ -5,6 +5,8 @@ import commentService from "../services/comment.service";
 import { GraphQLError } from "graphql";
 import { Console } from "node:console";
 
+
+// Verifies if the user's role matches one of the required roles for the action
 const checkRole = (requiredRoles: string[], role: string) => {
     if (!requiredRoles.includes(role)) {
         throw new GraphQLError("Acceso denegado", {
@@ -13,6 +15,7 @@ const checkRole = (requiredRoles: string[], role: string) => {
     }
 };
 
+// Ensures the user is the owner of the specified comment   
 const validateCommentOwnership = async (commentId: string, userId: string) => {
     const comment = await commentService.findById(commentId);
     if (comment?.userId.toString() !== userId) {
@@ -22,6 +25,7 @@ const validateCommentOwnership = async (commentId: string, userId: string) => {
     }
 };
 
+// Ensures the user is the owner of the specified reply
 const validateReplyOwnership = async (commentId: string, replyId: string, userId: string) => {
     const reply = await commentService.findReplyById(commentId, replyId);
     if (reply?.userId.toString() !== userId) {
@@ -31,6 +35,8 @@ const validateReplyOwnership = async (commentId: string, replyId: string, userId
     }
 };
 
+
+// Ensures the user is the owner of the specified reaction
 const validateReactionOwnership = async (commentId: string, reactionId: string, userId: string) => {
     const reaction = await commentService.findReactionById(commentId, reactionId);
     if (reaction?.userId.toString() !== userId) {
@@ -43,6 +49,8 @@ const validateReactionOwnership = async (commentId: string, reactionId: string, 
 
 export const resolvers = {
     Query: {
+
+        // Fetches a user by their ID
         user: async (_root: any, params: any) => {
             try {
                 const user: UserDocument | null = await userService.findById(params.id);
@@ -52,7 +60,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al obtener el usuario: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Fetches all users
         users: async () => {
             try {
                 const users: UserDocument[] = await userService.findAll();
@@ -62,6 +70,7 @@ export const resolvers = {
             }
         },
 
+        // Fetches a user by their email
         userByEmail: async (_root: any, params: any) => {
             try {
                 const user: UserDocument | null = await userService.findByEmail(params.email);
@@ -71,7 +80,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al obtener el usuario por correo: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Fetches a comment by its ID
         comment: async (_root: any, params: any) => {
             try {
                 const comment: CommentDocument | null = await commentService.findById(params.id);
@@ -81,7 +90,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al obtener el comentario: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Fetches all comments
         comments: async () => {
             try {
                 const comments: CommentDocument[] = await commentService.findAll();
@@ -93,6 +102,8 @@ export const resolvers = {
     },
 
     Mutation: {
+
+        // Handles user login
         login: async (_root: any, params: any) => {
             try {
                 const userOutput = await userService.login(params.input);
@@ -102,7 +113,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error en el inicio de sesión: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+         // Creates a new user
         createUser: async (_root: any, params: any, context: any) => {
             try {
                 checkRole(['superadmin'], context.user.role);
@@ -112,7 +123,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al crear el usuario: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Updates an existing user
         updateUser: async (_root: any, params: any, context: any) => {
             try {
                 checkRole(['superadmin'], context.user.role);
@@ -123,7 +134,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al actualizar el usuario: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+         // Deletes an existing user
         deleteUser: async (_root: any, params: any, context: any) => {
             try {
                 checkRole(['superadmin'], context.user.role);
@@ -135,6 +146,7 @@ export const resolvers = {
             }
         },
 
+        // Creates a new comment
         createComment: async (_root: any, params: any, context: any) => {
             try {
                 params.input.userId = context.user.user_id;
@@ -144,7 +156,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al crear el comentario: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Updates an existing comment
         updateComment: async (_root: any, params: any, context: any) => {
             try {
                 await validateCommentOwnership(params.id, context.user.user_id);
@@ -155,7 +167,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al actualizar el comentario: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Deletes an existing comment
         deleteComment: async (_root: any, params: any, context: any) => {
             try {
                 await validateCommentOwnership(params.input.commentId, context.user.user_id);
@@ -166,7 +178,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al eliminar el comentario: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+         // Adds a reply to a comment
         addReply: async (_root: any, params: any, context: any) => {
             try {
                 params.userId = context.user.user_id;
@@ -179,6 +191,7 @@ export const resolvers = {
             }
         },
 
+        // Adds a nested reply to another reply
         addReplyToReply: async (_root: any, params: any, context: any) => {
             try {
                 params.userId = context.user.user_id;
@@ -188,7 +201,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al agregar respuesta anidada: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Deletes a reply
         deleteReply: async (_root: any, params: any, context: any) => {
             try {
                 await validateReplyOwnership(params.body.commentId, params.body.replyId , context.user.user_id);
@@ -199,7 +212,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al eliminar la respuesta: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+            // Updates a reply
         updateReply: async (_root: any, params: any, context: any) => {
             try {
                 console.log(params.body.replyId);
@@ -213,7 +226,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al actualizar la respuesta: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Adds a reaction to a comment
         addReaction: async (_root: any, params: any, context: any) => {
             try {
                 params.userId = context.user.user_id;
@@ -224,7 +237,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al agregar la reacción: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Adds a reaction to a reply
         addReactionToReply: async (_root: any, params: any, context: any) => {
             try {
                 params.userId = context.user.user_id;
@@ -234,7 +247,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al agregar la reacción a la respuesta: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Deletes a reaction
         deleteReaction: async (_root: any, params: any, context: any) => {
             try {
                 await validateReactionOwnership(params.body.commentId, params.body.reactionId , context.user.user_id);
@@ -245,7 +258,7 @@ export const resolvers = {
                 throw new GraphQLError(`Error al eliminar la reacción: ${error}`, { extensions: { code: "INTERNAL_SERVER_ERROR" } });
             }
         },
-
+        // Updates a reaction
         updateReaction: async (_root: any, params: any, context: any) => {
             try {
                 await validateReactionOwnership(params.reaction.commentId, params.reaction.reactionId , context.user.user_id);
