@@ -2,16 +2,16 @@
 import express, { Express, Request, Response } from "express"; // Import Express framework and types
 
 // Import the router and database configuration
-import { router } from "./routes/users.router"; // Import the router for user-related routes
-import { db } from "./config/db"; // Import the database connection
+import { router } from "./routes/users.router.js"; // Import the router for user-related routes
+import { db } from "./config/db.js"; // Import the database connection
 
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware as apolloMiddleware } from '@apollo/server/express4' 
 import { readFile } from 'node:fs/promises';
-import { resolvers } from './graphql/resolvers';
+import { resolvers } from './graphql/resolvers.js';
 import jwt from "jsonwebtoken"
 import cors from 'cors';
-import auth from "./middlewares/auth";
+import auth from "./middlewares/auth.js";
 
 // Initialize the Express application
 const app: Express = express(); // Create an instance of an Express application

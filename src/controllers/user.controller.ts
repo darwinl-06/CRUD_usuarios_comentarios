@@ -1,8 +1,9 @@
 import express, { Request, Response} from "express";
-import { UserDocument, UserInput } from "../models/user.model";
+import { UserDocument, UserInput } from "../models/user.model.js";
 import { UserInfo } from "os";
-import userService from "../services/user.service";
-import {NotAuthorizedError, UserExistsError} from "../exceptions"
+import userService from "../services/user.service.js";
+import UserExistsError from "../exceptions/UserExistsError.js";
+import NotAuthorizedError from "../exceptions/NotAuthorized.js";
 
 class UserController {
     

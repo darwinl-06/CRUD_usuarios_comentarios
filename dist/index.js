@@ -1,34 +1,54 @@
-"use strict"; // Enforces strict mode, which catches common coding errors and prevents certain actions.
-
-// Helper function to manage module imports, ensuring compatibility with CommonJS modules.
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-
-// Defines the module as an ECMAScript module.
-Object.defineProperty(exports, "__esModule", { value: true });
-
-// Importing the Express framework for building web applications.
-const express_1 = __importDefault(require("express"));
-
-// Initializing the Express application.
-const app = (0, express_1.default)();
-
-// Defining the port number for the server to listen on.
-const PORT = 8000;
-
-// Middleware to parse incoming JSON requests.
-app.use(express_1.default.json());
-
-// Middleware to parse URL-encoded data with the option to handle nested objects.
-app.use(express_1.default.urlencoded({ extended: true }));
-
-// Setting up a route to respond with 'Hello World' on the root URL.
-app.get('/', (req, res) => {
-    res.send('Hello World');
+// Import necessary modules
+import express from "express"; // Import Express framework and types
+// Import the router and database configuration
+import { router } from "./routes/users.router.js"; // Import the router for user-related routes
+import { db } from "./config/db.js"; // Import the database connection
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware as apolloMiddleware } from '@apollo/server/express4';
+import { readFile } from 'node:fs/promises';
+import { resolvers } from './graphql/resolvers.js';
+import jwt from "jsonwebtoken";
+import cors from 'cors';
+// Initialize the Express application
+const app = express(); // Create an instance of an Express application
+// Define the port to listen on, defaulting to 8000 if not specified in environment variables
+const PORT = process.env.PORT || 8000;
+// Middleware to parse JSON request bodies
+app.use(express.json());
+// Middleware to parse URL-encoded request bodies
+app.use(express.urlencoded({ extended: true }));
+// Mount the user router at the /api/users endpoint
+app.use('/api/users', router);
+app.use(cors());
+const typeDefs = await readFile('./src/graphql/schema.graphql', 'utf8');
+async function getContext({ req }) {
+    var _a;
+    const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.replace("Bearer ", "");
+    const operationName = req.body.operationName;
+    if (operationName === "Login") {
+        return {};
+    }
+    if (!token) {
+        throw new Error("Unauthorized");
+    }
+    try {
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET || "secret");
+        return { user: decodedToken };
+    }
+    catch (error) {
+        throw new Error("Unauthorized or Token expired");
+    }
+}
+const apolloServer = new ApolloServer({ typeDefs, resolvers });
+await apolloServer.start();
+app.use('/graphql', apolloMiddleware(apolloServer, { context: getContext }));
+// Define a route for the root URL ("/") that responds with "Hola mundo"
+app.get("/", (req, res) => {
+    res.send("Hola mundo");
 });
-
-// Starting the server and logging the URL where it's running.
-app.listen(PORT, () => {
+// Connect to the database and start the server once the connection is successful
+db.then(() => app.listen(PORT, () => {
+    // Log the server URL when the server starts listening
     console.log(`Server running on http://localhost:${PORT}`);
-});
+    console.log(`Graphql running on http://localhost:${PORT}/graphql`);
+}));

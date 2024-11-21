@@ -1,7 +1,8 @@
 // Import necessary modules and types
-import { NotAuthorizedError, UserExistsError } from "../exceptions"
-import { UserDocument, UserInput } from "../models/user.model";
-import UserModel from "../models/user.model";
+import UserExistsError from "../exceptions/UserExistsError.js";
+import NotAuthorizedError from "../exceptions/NotAuthorized.js";
+import { UserDocument, UserInput } from "../models/user.model.js";
+import UserModel from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 
