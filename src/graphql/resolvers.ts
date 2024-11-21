@@ -170,7 +170,7 @@ export const resolvers = {
         // Deletes an existing comment
         deleteComment: async (_root: any, params: any, context: any) => {
             try {
-                await validateCommentOwnership(params.input.commentId, context.user.user_id);
+                await validateCommentOwnership(params.id, context.user.user_id);
                 const comment: CommentDocument | null = await commentService.delete(params.id);
                 if (!comment) throw new GraphQLError("Comentario no encontrado para eliminar", { extensions: { code: "NOT_FOUND" } });
                 return comment;
