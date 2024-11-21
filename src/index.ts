@@ -36,7 +36,7 @@ async function getContext({ req }: { req: Request }) {
   const token = req.headers.authorization?.replace("Bearer ", "");
 
   const operationName = req.body.operationName;
-  if (operationName === "login") {
+  if (operationName === "Login") {
       return {};
   }
 

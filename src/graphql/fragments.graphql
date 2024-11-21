@@ -18,8 +18,7 @@ fragment CommentFields on Comment {
     id
     content
     userId
-    replies {
-        ...ReplyFields
+    replies {id, content, userId
     }
     reactions {
         ...ReactionFields
@@ -33,15 +32,30 @@ fragment ReactionFields on Reaction {
     userId
 }
 
-# Fragmentos para los campos de respuestas
-fragment ReplyFields on Reply {
+
+
+"""
+
+query Comments {
+    comments {
+        ...CommentFields
+    }
+}
+
+fragment CommentFields on Comment {
     id
     content
     userId
-    replies {
-        ...ReplyFields
-    }
+    replies{id,content,userId}
     reactions {
         ...ReactionFields
     }
 }
+
+fragment ReactionFields on Reaction {
+    id
+    content
+    userId
+}
+
+"""
