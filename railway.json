@@ -1,8 +1,8 @@
 {
-  "build": {
-    "command": "npm install && npm run build"
+  "build":{
+    "command":"npm install && npm run build"
   },
-  "start": {
-    "command": "npm start"
-  }
+  "start":{
+    "command":"npm start"
+  }
 }
